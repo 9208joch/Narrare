@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Dokumentation_Presentation/" />
+  <Project Path="Narrare.Api/Narrare.Api.csproj" />
+  <Project Path="Narrare.Application/Narrare.Application.csproj" />
+  <Project Path="Narrare.Domain/Narrare.Domain.csproj" />
+  <Project Path="Narrare.Infrastructure/Narrare.Infrastructure.csproj" />
+  <Project Path="Narrare.Web/Narrare.Web.csproj" />
+</Solution>
