@@ -1,5 +1,8 @@
 <Solution>
-  <Folder Name="/Dokumentation_Presentation/" />
+  <Folder Name="/Dokumentation_Presentation/">
+    <File Path="G_Dokumentation.txt" />
+    <File Path="VG_Dokumentation.txt" />
+  </Folder>
   <Project Path="Narrare.Api/Narrare.Api.csproj" />
   <Project Path="Narrare.Application/Narrare.Application.csproj" />
   <Project Path="Narrare.Domain/Narrare.Domain.csproj" />
