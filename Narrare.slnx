@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/Dokumentation_Presentation/">
     <File Path="G_Dokumentation.txt" />
+    <File Path="Krav_fran_skola.txt" />
+    <File Path="Min_grundplan.txt" />
+    <File Path="Roadmap.txt" />
     <File Path="VG_Dokumentation.txt" />
   </Folder>
   <Project Path="Narrare.Api/Narrare.Api.csproj" />

@@ -1,0 +1,58 @@
+
+Inlämningsuppgift
+– Snackis
+
+
+
+◦ Ett diskussionsforum
+◦ Internetforum, är webbaserade
+diskussionsforum på internet.
+◦ Ett forum har vanligen en hierarkisk eller
+träd-liknande struktur, med huvud- och
+underkategorier.
+◦ Beroende på forumets inställningar så kan
+användare vara anonyma eller behöva
+registrera sig för att kunna använda det. På
+de flesta forum behöver man inte logga in
+för att kunna läsa diskussioner, däremot för
+att skriva något.
+
+◦ Krav
+◦ MVC, eller Blazor vi kör Blazor (jag är oerfaren i detta)
+◦ Minst en del av applikationen ska funktionellt vara frikopplad från huvudprojektet (helt eget
+projekt), och exponeras ut som ett API
+◦ Publicerat på Azure
+◦ All kod ska följa Dependency Injection-mönstret, och med service och repository-lager
+◦ Bootstrap-fint (men med egen CSS också)
+◦ Fler krav kan komma (agilt)
+
+
+Inlämningsuppgift – Public - G
+
+◦ Följande funktioner ska finnas:
+◦ Inloggning för admin
+◦ Skapa meny för sajten, samt kunna flytta och radera menyalternativ.
+◦ Skapa sidor (En sida är inte en ny cshtml-fil, utan en växling av innehåll, på samma sida)
+◦ Möjlighet att lägga in innehåll på sidan, I main-delen:
+◦ Rubrik
+◦ Text (Samma utseende på hela texten)
+◦ Bilder
+◦ Länkar
+◦ Enkelt admin för att bestämma hur en rubrik, text, bild, länk ska se ut, via CSS.
+◦ Besöksräknarfunktionalitet, antal besökare per sida.
+◦ Responsiv design, fungera I mobiltelefon
+
+
+
+Inlämningsuppgift – Public - VG
+
+◦ G-delen plus:
+◦ Möjlighet att formattera delar av texten, t ex fet stil, olika typsnitt osv
+◦ Möjlighet att kunna lägga till innehåll på flera ställen på sidan (t ex vänsterkolumn, footern)
+◦ Möjlighet att infoga plugins, I eget definierat format, som är helt obundet till Public kodmässigt.
+◦ Exempelvis:
+◦ Visa besöksräknare
+◦ Bildgalleri
+◦ Väder
+◦ SEO-anpassad URL/URI för sajtens sidor
+◦ Det finns utrymme för egna ideér och funktioner.

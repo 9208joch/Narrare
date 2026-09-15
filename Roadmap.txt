@@ -1,0 +1,113 @@
+Skeleton:
+
+DI
+Repository
+Services
+EF Core
+DbContext
+migrations
+grundläggande Blazor
+Bootstrap
+CSS
+layout
+navbar
+footer
+Azure deployment
+API skeleton
+authentication foundation
+
+G/ basic funktionalitet
+
+Användare:
+
+Registrera
+Logga in
+Logga ut
+Profil
+Redigera profil
+Profilbild
+Standardbild
+Medlem sedan
+
+Forum:
+
+Kategorier Städ & rengöring, Renovering, Upcycle, Trädgård, Inredning, DIY & projekt
+Övrigt
+Skapa inlägg
+Redigera egna inlägg
+Ta bort egna inlägg
+Kommentarer
+Redigera egna kommentarer
+Ta bort egna kommentarer
+Datum
+Relativ tid
+Blommor
+Kommentarsräkning
+Kommentarsortering
+
+Moderering:
+
+Rapportera
+Admin inbox
+Varning
+Blockera användare
+Redigera/ta bort innehåll
+Kategorihantering
+
+Kommunikation:
+
+Privata meddelanden
+Söka användare
+Blockera PM
+
+Admin:
+
+Användarsök
+Användarhantering
+Kategorier
+Inlägg
+Kommentarer
+
+Noggrann kontroll av befintliga funktioner
+åtgärda eventuella problem
+"sprint revue" (med mig, mig själv och jag)
+dokumenthantering inför presentation och förenkla för lärare
+
+
+VG/ riktigt forum
+
+Svar på kommentarer
+Bilder/bilagor
+Grupper
+Gruppägare/moderator
+Gruppmedlemmar
+Profil-sidor
+Profilrapportering
+Admin kan redigera profil
+Svordomsfilter
+Spara inlägg
+Förbättrad sökning
+
+Noggrann kontroll av befintliga funktioner
+åtgärda eventuella problem
+"sprint revue" (med mig, mig själv och jag)
+dokumenthantering inför presentation och förenkla för lärare
+
+Minimum klart
+
+Förberedelse av presentation
+
+VG++/ Säkerhet
+
+idéer att se över senare
+
+XSS
+SQL Injection
+CSRF
+Password hashing
+Cookie configuration
+Authorization
+Role checks
+File upload security
+Input validation
+IDOR

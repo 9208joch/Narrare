@@ -1,4 +1,5 @@
 using Narrare.Web.Components;
+using Narrare.Infrastructure;
 
 namespace Narrare.Web
 {
@@ -11,6 +12,8 @@ namespace Narrare.Web
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
+
+            builder.Services.AddInfrastructure(builder.Configuration);
 
             var app = builder.Build();
 
@@ -30,7 +33,7 @@ namespace Narrare.Web
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
-
+            
             app.Run();
         }
     }

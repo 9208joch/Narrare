@@ -1,0 +1,73 @@
+Denna har jag ej följt noga utan snarare att bolla ideer med mig skälv
+
+
+
+namn på forum: Narrare
+tema på forumet: hus och hem
+
+Narrare latin för "att berätta"
+
+ full onion från start
+ en master brach med "skelettet"
+efter det g-del i egen branch som flyttas till master
+sen vg del osv
+arbete i ordning Skelett -> g -> vg -> vg+++
+
+förbereda för nästa steg är ok då vg är minimum
+säkerhet implementeras allt efter som med större övergång vid VG++
+
+bakgrund på sida #FFDCDCDC
+bakgrund till menyer,banner och fotter #FF7CFC00
+användare kan alltid läsa men måste vara inloggad för att kommentera eller eller göra inlägg
+Kategorier:
+Städ & rengöring
+Renovering
+Upcycle
+Trädgård
+Inredning
+DIY & projekt
+Övrigt
+tvinga användare att välja kattegori vid inlägg
+om användaren ej har profilbild så har vi som standard en bild på ett trä  (har bilden)
+skall fylla med inlägg (AI)
+
+G
+Admin:
+söka på användare
+Blockera/ avblockera användare
+Skicka varning till användare samt se antal varningar och kommentarer
+ta bort, lägga till och edditera kattegorier
+edditera och ta bort inlägg
+
+Användare:
+skapa konto
+edditera info på eget konto och vad som skall visas (användarnamn, ålder, geografisk platts, yrke, profilbild fler?)
+användarnamn=Krav
+Varigt medlem xx tid = Visas alltid och går ej att edditera
+ålder=krav men ej krav på att visa
+geografisk platts =krav men ej krav på att visa
+yrke =ej krav
+profilbild=ej krav (om ingen vald så standard trä bild)
+
+
+inlägg och kommentarer datumparkering och xx tid sen
+
+privat meddelande funktion med sökfunktion av medlemmar
+blockera specifika medlemmar funktion (endast privata meddelanden)
+medlemmar skall kunna anmäla inlägg eller kommentar, i denna funktion så krav på formulär där man måste skriva varför man anmäler. detta hamnar sedan i admins inbox
+
+visa inlägg med knappar under (blomma knapp (uppvote), kommentarer och … med anmäl och dela funktion tänk reddit)
+i kommentarerna sortering möjligheter mellan senast, äldst och flest blommor
+
+
+Vg
+kommentera på kommentar inte bara på inlägg
+lägga kommentera med bil funktion
+skapa separata grupper med endast inbjudna medlemmar med semiadmin (grundaren) som kan ta bort inlägg, kommentarer och medlemmar + admin samma möjlighet som innan
+användare skall kunna ha egen info sida (åtkomst genom att klicka på användare i ett inlägg eller söka) + anmäl funktion. admin skall kunna edditera detta
+automatisk svor och skäls ord hantering, ersätta ord med ******* (skit, dynga och liknande är inte förbjudna men helvete eller fitta och likande är)
+mer idéer?
+
+ VG+++
+Fördjupning säkerhet
+detta skall ses över hur bäst
