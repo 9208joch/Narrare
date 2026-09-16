@@ -1,5 +1,8 @@
 using Narrare.Web.Components;
 using Narrare.Infrastructure;
+using Microsoft.EntityFrameworkCore;
+using Narrare.Infrastructure.Data;
+
 
 namespace Narrare.Web
 {

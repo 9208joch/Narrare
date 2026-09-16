@@ -10,10 +10,6 @@
     <ProjectReference Include="..\Narrare.Application\Narrare.Application.csproj" />
     <ProjectReference Include="..\Narrare.Domain\Narrare.Domain.csproj" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Repositories\" />
-  </ItemGroup>
 	
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.12">
