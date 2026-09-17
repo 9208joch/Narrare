@@ -50,4 +50,52 @@ public class CategoriesController : ControllerBase
 
         return Ok(result);
     }
+    [HttpPost]
+    public async Task<ActionResult<CategoryDto>> Create([FromBody] Category category)
+    {
+        var createdCategory = await _categoryService.CreateAsync(category);
+
+        var result = new CategoryDto
+        {
+            Id = createdCategory.Id,
+            Name = createdCategory.Name,
+            Description = createdCategory.Description
+        };
+
+        return Ok(result);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<ActionResult<CategoryDto>> Update(
+    int id,
+    Category category)
+    {
+        var updatedCategory = await _categoryService.UpdateAsync(id, category);
+
+        if (updatedCategory == null)
+        {
+            return NotFound();
+        }
+        
+        var result = new CategoryDto
+        {
+            Id = updatedCategory.Id,
+            Name = updatedCategory.Name,
+            Description = updatedCategory.Description
+        };
+
+        return Ok(result);
+    }
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _categoryService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 }
