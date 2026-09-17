@@ -19,9 +19,13 @@ public static class DependencyInjection
         services.AddDbContext<NarrareDbContext>(options =>
             options.UseSqlServer(
                 configuration.GetConnectionString("NarrareDb")));
-        services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        services.AddScoped(typeof(IRepository<>), 
+            typeof(Repository<>));
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
 
         return services;
     }
