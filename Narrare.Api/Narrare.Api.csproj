@@ -15,8 +15,4 @@
     <ProjectReference Include="..\Narrare.Infrastructure\Narrare.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-  </ItemGroup>
-
 </Project>
