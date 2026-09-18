@@ -18,7 +18,7 @@ för att kunna läsa diskussioner, däremot för
 att skriva något.
 
 ◦ Krav
-◦ MVC, eller Blazor vi kör Blazor (jag är oerfaren i detta)
+◦ MVC, eller Blazor jag kör Blazor (jag är oerfaren i detta)
 ◦ Minst en del av applikationen ska funktionellt vara frikopplad från huvudprojektet (helt eget
 projekt), och exponeras ut som ett API
 ◦ Publicerat på Azure

@@ -12,7 +12,7 @@
 <!-- Skapa nytt inlägg -->
 <div class="card mb-4">
     <div class="card-body">
-
+        
         <h3 class="card-title">Skapa nytt inlägg</h3>
 
         <div class="mb-3">
@@ -85,19 +85,56 @@ else
                         {
                             <div class="border rounded p-2 mb-2">
 
-                                <p class="mb-1">
-                                    @comment.Content
-                                </p>
+                                @if (editingComments.ContainsKey(comment.Id)
+                                    && editingComments[comment.Id])
+                                {
+                                    <textarea class="form-control mb-2"
+                                              @bind="editedCommentContent[comment.Id]"></textarea>
 
-                                <small class="text-muted">
-                                    @comment.CreatedAt
-                                    .ToLocalTime()
-                                    .ToString("yyyy-MM-dd HH:mm")
-                                </small>
+                                    <button class="btn btn-success btn-sm me-2"
+                                            @onclick="() => SaveComment(comment)">
+                                        Spara
+                                    </button>
+                                    
+                                    <button class="btn btn-secondary btn-sm"
+                                            @onclick="() => CancelEdit(comment.Id)">
+                                        Avbryt
+                                    </button>
+                                }
+                                else
+                                {
+                                    <p class="mb-1">
+                                        @comment.Content
+                                    </p>
+
+                                    <small class="text-muted">
+                                        @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                                    </small>
+
+                                    <br />
+
+                                    <button class="btn btn-outline-secondary btn-sm mt-2"
+                                            @onclick="() => EditComment(comment)">
+                                        Redigera
+                                    </button>
+                                }
 
                             </div>
                         }
                     }
+
+                    <div class="mt-3">
+                        <textarea class="form-control"
+                                  rows="2"
+                                  placeholder="Skriv en kommentar..."
+                                  @bind="newCommentContent[post.Id]"></textarea>
+
+                        <button class="btn btn-secondary mt-2"
+                                @onclick="() => CreateComment(post.Id)">
+                            Kommentera
+                        </button>
+                    </div>
+
                 }
 
             </div>
@@ -107,10 +144,15 @@ else
 
 
 @code {
+    private Dictionary<int, string> newCommentContent = new();
 
     private List<PostDto>? posts;
 
     private Dictionary<int, List<CommentDto>> comments = new();
+
+    private Dictionary<int, bool> editingComments = new();
+
+    private Dictionary<int, string> editedCommentContent = new();
 
     private Post newPost = new()
     {
@@ -118,7 +160,7 @@ else
         CategoryId = 2
     };
 
-
+    
     protected override async Task OnInitializedAsync()
     {
         posts = await PostsApiService.GetAllAsync();
@@ -135,6 +177,8 @@ else
 
             comments[post.Id] =
                 postComments ?? new List<CommentDto>();
+
+            newCommentContent[post.Id] = string.Empty;
         }
     }
 
@@ -148,7 +192,7 @@ else
         {
             return;
         }
-
+        
         posts ??= new List<PostDto>();
 
         posts.Add(createdPost);
@@ -156,10 +200,83 @@ else
         comments[createdPost.Id] =
             new List<CommentDto>();
 
+        newCommentContent[createdPost.Id] = string.Empty;
+        
         newPost = new Post
         {
             UserId = 1,
             CategoryId = 2
         };
     }
+    private async Task CreateComment(int postId)
+    {
+        if (!newCommentContent.TryGetValue(postId, out var content)
+            || string.IsNullOrWhiteSpace(content))
+        {
+            return;
+        }
+
+        var comment = new Comment
+        {
+            Content = content,
+            UserId = 1,
+            PostId = postId
+        };
+
+        var createdComment =
+            await CommentsApiService.CreateAsync(comment);
+
+        if (createdComment == null)
+        {
+            return;
+        }
+
+        if (!comments.ContainsKey(postId))
+        {
+            comments[postId] = new List<CommentDto>();
+        }
+        
+        comments[postId].Add(createdComment);
+
+        newCommentContent[postId] = string.Empty;
+    }
+    private void EditComment(CommentDto comment)
+    {
+        editingComments[comment.Id] = true;
+        editedCommentContent[comment.Id] = comment.Content;
+    }
+    private void CancelEdit(int commentId)
+    {
+        editingComments[commentId] = false;
+    }
+    private async Task SaveComment(CommentDto comment)
+    {
+        if (!editedCommentContent.TryGetValue(comment.Id, out var content)
+            || string.IsNullOrWhiteSpace(content))
+        {
+            return;
+        }
+
+        var updatedComment = new Comment
+        {
+            Content = content,
+            UserId = comment.UserId,
+            PostId = comment.PostId
+        };
+
+        var result = await CommentsApiService.UpdateAsync(
+            comment.Id,
+            updatedComment);
+
+        if (result == null)
+        {
+            return;
+        }
+
+        comment.Content = result.Content;
+        comment.UpdatedAt = result.UpdatedAt;
+
+        editingComments[comment.Id] = false;
+    }
+
 }

@@ -33,4 +33,27 @@ public class ApiService
 
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
+    public async Task<TResponse?> PutAsync<TRequest, TResponse>(
+    string url,
+    TRequest data)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        var response = await client.PutAsJsonAsync(url, data);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TResponse>();
+    }
+    public async Task<bool> DeleteAsync(string url)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        var response = await client.DeleteAsync(url);
+
+        return response.IsSuccessStatusCode;
+    }
 }
