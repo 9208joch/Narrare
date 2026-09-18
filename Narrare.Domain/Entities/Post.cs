@@ -23,9 +23,9 @@ public class Post
     public int CategoryId { get; set; }
 
     // Navigation properties
-    public User User { get; set; } = null!;
+    public User? User { get; set; }
 
-    public Category Category { get; set; } = null!;
+    public Category? Category { get; set; }
 
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }
