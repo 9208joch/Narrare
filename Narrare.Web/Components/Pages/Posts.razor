@@ -1,0 +1,165 @@
+﻿@page "/posts"
+
+@using Narrare.Application.DTOs
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject PostsApiService PostsApiService
+@inject CommentsApiService CommentsApiService
+
+<h1 class="mb-4">Narrare</h1>
+
+<!-- Skapa nytt inlägg -->
+<div class="card mb-4">
+    <div class="card-body">
+
+        <h3 class="card-title">Skapa nytt inlägg</h3>
+
+        <div class="mb-3">
+            <label class="form-label">Titel</label>
+
+            <input class="form-control"
+                   @bind="newPost.Title" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Innehåll</label>
+
+            <textarea class="form-control"
+                      rows="4"
+                      @bind="newPost.Content"></textarea>
+        </div>
+
+        <button class="btn btn-primary"
+                @onclick="CreatePost">
+            Skapa inlägg
+        </button>
+
+    </div>
+</div>
+
+
+<!-- Inlägg -->
+@if (posts == null)
+{
+    <p>Laddar...</p>
+}
+else if (posts.Count == 0)
+{
+    <p>Inga inlägg hittades.</p>
+}
+else
+{
+    @foreach (var post in posts)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+
+                <h3 class="card-title">
+                    @post.Title
+                </h3>
+
+                <p class="text-muted">
+                    @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                </p>
+
+                <p class="card-text">
+                    @post.Content
+                </p>
+
+                @if (comments.ContainsKey(post.Id))
+                {
+                    <hr />
+
+                    <h5>Kommentarer</h5>
+
+                    @if (comments[post.Id].Count == 0)
+                    {
+                        <p class="text-muted">
+                            Inga kommentarer ännu.
+                        </p>
+                    }
+                    else
+                    {
+                        @foreach (var comment in comments[post.Id])
+                        {
+                            <div class="border rounded p-2 mb-2">
+
+                                <p class="mb-1">
+                                    @comment.Content
+                                </p>
+
+                                <small class="text-muted">
+                                    @comment.CreatedAt
+                                    .ToLocalTime()
+                                    .ToString("yyyy-MM-dd HH:mm")
+                                </small>
+
+                            </div>
+                        }
+                    }
+                }
+
+            </div>
+        </div>
+    }
+}
+
+
+@code {
+
+    private List<PostDto>? posts;
+
+    private Dictionary<int, List<CommentDto>> comments = new();
+
+    private Post newPost = new()
+    {
+        UserId = 1,
+        CategoryId = 2
+    };
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        posts = await PostsApiService.GetAllAsync();
+
+        if (posts == null)
+        {
+            return;
+        }
+
+        foreach (var post in posts)
+        {
+            var postComments =
+                await CommentsApiService.GetByPostAsync(post.Id);
+
+            comments[post.Id] =
+                postComments ?? new List<CommentDto>();
+        }
+    }
+
+
+    private async Task CreatePost()
+    {
+        var createdPost =
+            await PostsApiService.CreateAsync(newPost);
+
+        if (createdPost == null)
+        {
+            return;
+        }
+
+        posts ??= new List<PostDto>();
+
+        posts.Add(createdPost);
+
+        comments[createdPost.Id] =
+            new List<CommentDto>();
+
+        newPost = new Post
+        {
+            UserId = 1,
+            CategoryId = 2
+        };
+    }
+}

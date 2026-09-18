@@ -3,7 +3,7 @@ using Narrare.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Narrare.Infrastructure.Data;
 using Narrare.Application;
-
+using Narrare.Web.Services;
 
 namespace Narrare.Web
 {
@@ -12,16 +12,22 @@ namespace Narrare.Web
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
             builder.Services.AddApplication();
             builder.Services.AddInfrastructure(builder.Configuration);
-
+            builder.Services.AddHttpClient("NarrareApi", client =>
+            {
+                client.BaseAddress = new Uri(
+                    builder.Configuration["ApiSettings:BaseUrl"]!
+                );
+            });
+            builder.Services.AddScoped<ApiService>();
+            builder.Services.AddScoped<PostsApiService>();
+            builder.Services.AddScoped<CommentsApiService>();
 
             // Add services to the container.
             builder.Services.AddRazorComponents()
                 .AddInteractiveServerComponents();
-
-            builder.Services.AddInfrastructure(builder.Configuration);
-            builder.Services.AddApplication();
 
             var app = builder.Build();
 
@@ -41,7 +47,7 @@ namespace Narrare.Web
             app.MapStaticAssets();
             app.MapRazorComponents<App>()
                 .AddInteractiveServerRenderMode();
-            
+
             app.Run();
         }
     }
