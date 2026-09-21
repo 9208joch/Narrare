@@ -22,4 +22,14 @@ public class PostsApiService
             "api/Posts",
             post);
     }
+    public async Task<PostDto?> UpdateAsync(int id, Post post)
+    {
+        return await _apiService.PutAsync<Post, PostDto>(
+            $"api/Posts/{id}",
+            post);
+    }
+    public async Task<bool> DeleteAsync(int id)
+    {
+        return await _apiService.DeleteAsync($"api/Posts/{id}");
+    }
 }
