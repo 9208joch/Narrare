@@ -41,7 +41,12 @@
         @if (loggedInUser != null)
         {
             <div class="alert alert-success mt-3">
-                Välkommen, @loggedInUser.Username!
+                <p>Välkommen, @loggedInUser.Username!</p>
+
+                <button class="btn btn-secondary"
+                        @onclick="Logout">
+                    Logga ut
+                </button>
             </div>
         }
 
@@ -71,5 +76,12 @@
         CurrentUserService.Login(result);
 
         loggedInUser = result;
+    }
+    private void Logout()
+    {
+        CurrentUserService.Logout();
+
+        loggedInUser = null;
+        login = new LoginUserDto();
     }
 }
