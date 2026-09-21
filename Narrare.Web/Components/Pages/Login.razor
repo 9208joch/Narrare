@@ -1,0 +1,75 @@
+﻿@page "/login"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject UsersApiService UsersApiService
+@inject CurrentUserService CurrentUserService
+
+<h1 class="mb-4">Logga in</h1>
+
+<div class="card">
+    <div class="card-body">
+
+        <div class="mb-3">
+            <label class="form-label">Användarnamn</label>
+
+            <input class="form-control"
+                   @bind="login.Username" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Lösenord</label>
+
+            <input class="form-control"
+                   type="password"
+                   @bind="login.Password" />
+        </div>
+        
+        <button class="btn btn-primary"
+                @onclick="LoginUser">
+            Logga in
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">
+                @errorMessage
+            </div>
+        }
+
+        @if (loggedInUser != null)
+        {
+            <div class="alert alert-success mt-3">
+                Välkommen, @loggedInUser.Username!
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    private LoginUserDto login = new();
+
+    private UserDto? loggedInUser;
+
+    private string? errorMessage;
+
+    private async Task LoginUser()
+    {
+        errorMessage = null;
+        loggedInUser = null;
+
+        var result = await UsersApiService.LoginAsync(login);
+
+        if (result == null)
+        {
+            errorMessage = "Fel användarnamn eller lösenord.";
+            return;
+        }
+
+        CurrentUserService.Login(result);
+
+        loggedInUser = result;
+    }
+}

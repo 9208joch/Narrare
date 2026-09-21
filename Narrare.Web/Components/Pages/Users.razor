@@ -1,0 +1,52 @@
+﻿@page "/users"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject UsersApiService UsersApiService
+
+<h1>Users</h1>
+
+@if (users == null)
+{
+    <p>Laddar...</p>
+}
+else if (users.Count == 0)
+{
+    <p>Inga användare hittades.</p>
+}
+else
+{
+    @foreach (var user in users)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h4>@user.Username</h4>
+
+                <p>
+                    Ålder: @user.Age
+                </p>
+
+                <p>
+                    Plats: @user.Location
+                </p>
+
+                @if (!string.IsNullOrWhiteSpace(user.Occupation))
+                {
+                    <p>
+                        Yrke: @user.Occupation
+                    </p>
+                }
+            </div>
+        </div>
+    }
+}
+
+@code {
+    private List<UserDto>? users;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UsersApiService.GetAllAsync();
+    }
+}

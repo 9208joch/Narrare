@@ -6,9 +6,22 @@
 
 @inject PostsApiService PostsApiService
 @inject CommentsApiService CommentsApiService
+@inject CurrentUserService CurrentUserService
 
 <h1 class="mb-4">Narrare</h1>
-
+@if (CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-success">
+        Inloggad som: @CurrentUserService.CurrentUser!.Username
+        (ID: @CurrentUserService.CurrentUser.Id)
+    </div>
+}
+else
+{
+    <div class="alert alert-warning">
+        Ingen användare är inloggad.
+    </div>
+}
 <!-- Skapa nytt inlägg -->
 <div class="card mb-4">
     <div class="card-body">
@@ -200,7 +213,6 @@ else
 
     private Post newPost = new()
     {
-        UserId = 1,
         CategoryId = 2
     };
 
@@ -228,32 +240,43 @@ else
 
 
     private async Task CreatePost()
+{
+    if (!CurrentUserService.IsLoggedIn)
     {
-        var createdPost =
-            await PostsApiService.CreateAsync(newPost);
+        return;
+    }
+        
+    newPost.UserId = CurrentUserService.CurrentUser!.Id;
 
-        if (createdPost == null)
+    var createdPost =
+        await PostsApiService.CreateAsync(newPost);
+
+    if (createdPost == null)
+    {
+        return;
+    }
+
+    posts ??= new List<PostDto>();
+
+    posts.Add(createdPost);
+
+    comments[createdPost.Id] =
+        new List<CommentDto>();
+        newCommentContent[createdPost.Id] = string.Empty;
+
+    newPost = new Post
+    {
+        CategoryId = 2
+    };
+}
+    
+    private async Task CreateComment(int postId)
+    {
+        if (!CurrentUserService.IsLoggedIn)
         {
             return;
         }
-        
-        posts ??= new List<PostDto>();
 
-        posts.Add(createdPost);
-
-        comments[createdPost.Id] =
-            new List<CommentDto>();
-
-        newCommentContent[createdPost.Id] = string.Empty;
-        
-        newPost = new Post
-        {
-            UserId = 1,
-            CategoryId = 2
-        };
-    }
-    private async Task CreateComment(int postId)
-    {
         if (!newCommentContent.TryGetValue(postId, out var content)
             || string.IsNullOrWhiteSpace(content))
         {
@@ -263,7 +286,7 @@ else
         var comment = new Comment
         {
             Content = content,
-            UserId = 1,
+            UserId = CurrentUserService.CurrentUser!.Id,
             PostId = postId
         };
 
@@ -279,7 +302,7 @@ else
         {
             comments[postId] = new List<CommentDto>();
         }
-        
+
         comments[postId].Add(createdComment);
 
         newCommentContent[postId] = string.Empty;

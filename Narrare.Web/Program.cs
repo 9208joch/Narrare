@@ -7,6 +7,7 @@ using Narrare.Web.Services;
 
 namespace Narrare.Web
 {
+    
     public class Program
     {
         public static void Main(string[] args)
@@ -15,6 +16,8 @@ namespace Narrare.Web
             
             builder.Services.AddApplication();
             builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddScoped<UsersApiService>();
+            builder.Services.AddSingleton<CurrentUserService>();
             builder.Services.AddHttpClient("NarrareApi", client =>
             {
                 client.BaseAddress = new Uri(

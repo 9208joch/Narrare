@@ -1,0 +1,93 @@
+﻿@page "/register"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject UsersApiService UsersApiService
+
+<h1 class="mb-4">Registrera konto</h1>
+
+<div class="card">
+    <div class="card-body">
+
+        <div class="mb-3">
+            <label class="form-label">Användarnamn</label>
+
+            <input class="form-control"
+                   @bind="user.Username" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Lösenord</label>
+
+            <input class="form-control"
+                   type="password"
+                   @bind="user.Password" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Ålder</label>
+
+            <input class="form-control"
+                   type="number"
+                   @bind="user.Age" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Plats</label>
+
+            <input class="form-control"
+                   @bind="user.Location" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Yrke</label>
+
+            <input class="form-control"
+                   @bind="user.Occupation" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Profilbild URL</label>
+
+            <input class="form-control"
+                   @bind="user.ProfileImageUrl" />
+        </div>
+
+        <button class="btn btn-primary"
+                @onclick="RegisterUser">
+            Registrera
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert alert-success mt-3">
+                @message
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    private RegisterUserDto user = new();
+
+    private string? message;
+
+    private async Task RegisterUser()
+    {
+        message = null;
+
+        var result = await UsersApiService.RegisterAsync(user);
+
+        if (result == null)
+        {
+            message = "Registreringen misslyckades.";
+            return;
+        }
+
+        message = $"Användaren {result.Username} skapades!";
+
+        user = new RegisterUserDto();
+    }
+}

@@ -16,7 +16,7 @@ public class UserService : IUserService
     {
         _userRepository = userRepository;
     }
-
+    
     public async Task<User?> GetByIdAsync(int id)
     {
         return await _userRepository.GetByIdAsync(id);
@@ -62,6 +62,39 @@ public class UserService : IUserService
         await _userRepository.SaveChangesAsync();
 
         return user;
+    }
+    public async Task<UserDto?> LoginAsync(LoginUserDto dto)
+    {
+        var user = await _userRepository.GetByUsernameAsync(dto.Username);
+
+        if (user == null)
+        {
+            return null;
+        }
+
+        if (user.IsBlocked)
+        {
+            return null;
+        }
+
+        if (user.PasswordHash != dto.Password)
+        {
+            return null;
+        }
+
+        return new UserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            Age = user.Age,
+            Location = user.Location,
+            Occupation = user.Occupation,
+            ProfileImageUrl = user.ProfileImageUrl,
+            ShowAge = user.ShowAge,
+            ShowLocation = user.ShowLocation,
+            ShowOccupation = user.ShowOccupation,
+            CreatedAt = user.CreatedAt
+        };
     }
 
     public async Task UpdateAsync(User user)

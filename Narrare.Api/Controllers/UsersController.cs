@@ -90,4 +90,16 @@ public class UsersController : ControllerBase
 
         return Ok(result);
     }
+    [HttpPost("login")]
+    public async Task<ActionResult<UserDto>> Login(LoginUserDto dto)
+    {
+        var user = await _userService.LoginAsync(dto);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        return Ok(user);
+    }
 }
