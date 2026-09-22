@@ -1,6 +1,8 @@
-﻿using System;
+﻿using Narrare.Domain.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
+
 
 namespace Narrare.Application.DTOs;
 
@@ -25,4 +27,6 @@ public class UserDto
     public bool ShowOccupation { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public UserRole Role { get; set; }
 }

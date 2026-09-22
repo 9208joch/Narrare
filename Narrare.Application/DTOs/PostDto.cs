@@ -19,4 +19,9 @@ public class PostDto
     public int UserId { get; set; }
 
     public int CategoryId { get; set; }
+    public bool IsDeleted { get; set; }
+
+    public int? DeletedByUserId { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
 }

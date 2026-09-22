@@ -111,3 +111,7 @@ Role checks
 File upload security
 Input validation
 IDOR
+
+
+Betalversion?
+reklam?

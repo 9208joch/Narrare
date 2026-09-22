@@ -23,4 +23,9 @@ public class Comment
     public User? User { get; set; } = null!;
 
     public Post? Post { get; set; } = null!;
+    public bool IsDeleted { get; set; }
+
+    public int? DeletedByUserId { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
 }

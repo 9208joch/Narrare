@@ -28,4 +28,11 @@ public class Post
     public Category? Category { get; set; }
 
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    public bool IsDeleted { get; set; }
+
+    public int? DeletedByUserId { get; set; }
+
+    public DateTime? DeletedAt { get; set; }
+
 }

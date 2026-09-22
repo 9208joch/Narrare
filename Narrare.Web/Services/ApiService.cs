@@ -17,6 +17,18 @@ public class ApiService
 
         return await client.GetFromJsonAsync<T>(url);
     }
+    public async Task<T?> GetAsync<T>(
+    string url,
+    int userId)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        client.DefaultRequestHeaders.Remove("X-User-Id");
+        client.DefaultRequestHeaders.Add("X-User-Id", userId.ToString());
+
+        return await client.GetFromJsonAsync<T>(url);
+    }
+
 
     public async Task<TResponse?> PostAsync<TRequest, TResponse>(
         string url,
@@ -45,7 +57,7 @@ public class ApiService
         {
             return default;
         }
-
+        
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
     public async Task<bool> DeleteAsync(string url)

@@ -8,6 +8,7 @@ using Narrare.Application.DTOs;
 
 namespace Narrare.Application.Services;
 
+
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
@@ -93,7 +94,8 @@ public class UserService : IUserService
             ShowAge = user.ShowAge,
             ShowLocation = user.ShowLocation,
             ShowOccupation = user.ShowOccupation,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Role = user.Role
         };
     }
 

@@ -7,7 +7,6 @@ namespace Narrare.Api.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
-
 {
     private readonly IUserService _userService;
 
@@ -32,7 +31,8 @@ public class UsersController : ControllerBase
             ShowAge = user.ShowAge,
             ShowLocation = user.ShowLocation,
             ShowOccupation = user.ShowOccupation,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Role = user.Role
         }).ToList();
 
         return Ok(result);
@@ -59,11 +59,13 @@ public class UsersController : ControllerBase
             ShowAge = user.ShowAge,
             ShowLocation = user.ShowLocation,
             ShowOccupation = user.ShowOccupation,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Role = user.Role
         };
 
         return Ok(result);
     }
+
     [HttpPost("register")]
     public async Task<ActionResult<UserDto>> Register(RegisterUserDto dto)
     {
@@ -85,11 +87,13 @@ public class UsersController : ControllerBase
             ShowAge = user.ShowAge,
             ShowLocation = user.ShowLocation,
             ShowOccupation = user.ShowOccupation,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            Role = user.Role
         };
 
         return Ok(result);
     }
+
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginUserDto dto)
     {
