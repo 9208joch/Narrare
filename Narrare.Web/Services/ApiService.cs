@@ -5,36 +5,44 @@ namespace Narrare.Web.Services;
 public class ApiService
 {
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly CurrentUserService _currentUserService;
 
-    public ApiService(IHttpClientFactory httpClientFactory)
+    public ApiService(
+        IHttpClientFactory httpClientFactory,
+        CurrentUserService currentUserService)
     {
         _httpClientFactory = httpClientFactory;
+        _currentUserService = currentUserService;
+    }
+
+    private void AddUserIdHeader(HttpClient client)
+    {
+        client.DefaultRequestHeaders.Remove("X-User-Id");
+
+        if (_currentUserService.CurrentUser != null)
+        {
+            client.DefaultRequestHeaders.Add(
+                "X-User-Id",
+                _currentUserService.CurrentUser.Id.ToString());
+        }
     }
 
     public async Task<T?> GetAsync<T>(string url)
     {
         var client = _httpClientFactory.CreateClient("NarrareApi");
 
-        return await client.GetFromJsonAsync<T>(url);
-    }
-    public async Task<T?> GetAsync<T>(
-    string url,
-    int userId)
-    {
-        var client = _httpClientFactory.CreateClient("NarrareApi");
-
-        client.DefaultRequestHeaders.Remove("X-User-Id");
-        client.DefaultRequestHeaders.Add("X-User-Id", userId.ToString());
+        AddUserIdHeader(client);
 
         return await client.GetFromJsonAsync<T>(url);
     }
-
 
     public async Task<TResponse?> PostAsync<TRequest, TResponse>(
         string url,
         TRequest data)
     {
         var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
 
         var response = await client.PostAsJsonAsync(url, data);
 
@@ -45,11 +53,14 @@ public class ApiService
 
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
+
     public async Task<TResponse?> PutAsync<TRequest, TResponse>(
-    string url,
-    TRequest data)
+        string url,
+        TRequest data)
     {
         var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
 
         var response = await client.PutAsJsonAsync(url, data);
 
@@ -57,12 +68,15 @@ public class ApiService
         {
             return default;
         }
-        
+
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
+
     public async Task<bool> DeleteAsync(string url)
     {
         var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
 
         var response = await client.DeleteAsync(url);
 

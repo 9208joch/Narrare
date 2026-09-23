@@ -17,6 +17,7 @@ public class CommentDto
     public int UserId { get; set; }
 
     public int PostId { get; set; }
+
     public bool IsDeleted { get; set; }
 
     public int? DeletedByUserId { get; set; }

@@ -95,19 +95,46 @@ else
                 }
                 else
                 {
-                    <h3 class="card-title">
-                        @post.Title
-                    </h3>
-             
-                            
-           
-                    <p class="text-muted">
-                        @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                    </p>
+                    @if (post.IsDeleted)
+{
+    <div class="alert alert-warning mb-3">
+        <strong>Inlägget har tagits bort</strong>
 
-                    <p class="card-text">
-                        @post.Content
-                    </p>
+        <p class="mb-0 mt-2">
+            Detta inlägg har tagits bort av en administratör
+            eftersom det bröt mot forumets regler.
+        </p>
+    </div>
+}
+else
+{
+    <h3 class="card-title">
+        @post.Title
+    </h3>
+
+    <p class="text-muted">
+        @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+    </p>
+
+    <p class="card-text">
+        @post.Content
+    </p>
+
+                        @if (CurrentUserService.IsLoggedIn &&
+                        (post.UserId == CurrentUserService.CurrentUser!.Id ||
+                         CurrentUserService.CurrentUser.Role == Narrare.Domain.Enums.UserRole.Admin))
+                        {
+                            <button class="btn btn-outline-secondary btn-sm me-2"
+                                    @onclick="() => EditPost(post)">
+                                Redigera
+                            </button>
+
+                            <button class="btn btn-outline-danger btn-sm"
+                                    @onclick="() => DeletePost(post)">
+                                Radera
+                            </button>
+                        }
+}
                     
                     @if (CurrentUserService.IsLoggedIn)
                     {
@@ -122,8 +149,8 @@ else
                         </button>
                     }
                 }
-
-                @if (comments.ContainsKey(post.Id))
+                
+                @if (!post.IsDeleted && comments.ContainsKey(post.Id))
                 {
                     <hr />
 
@@ -166,34 +193,50 @@ else
                                 }
                                 else
                                 {
-                                    <p class="mb-1">
-                                        @comment.Content
-                                    </p>
+                                    @if (comment.IsDeleted)
+{
+    <div class="alert alert-warning mb-0">
+        <strong>Kommentaren har tagits bort</strong>
 
-                                    <small class="text-muted">
-                                        @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                                    </small>
+        <p class="mb-0 mt-2">
+            Denna kommentar har tagits bort av en administratör
+            eftersom den bröt mot forumets regler.
+        </p>
+    </div>
+}
+else
+{
+    <p class="mb-1">
+        @comment.Content
+    </p>
 
-                                    <br />
+    <small class="text-muted">
+        @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+    </small>
 
-                                    @if (CurrentUserService.IsLoggedIn)
-                                    {
-                                        <button class="btn btn-outline-secondary btn-sm mt-2"
-                                                @onclick="() => EditComment(comment)">
-                                            Redigera
-                                        </button>
+    <br />
 
-                                        <button class="btn btn-outline-danger btn-sm mt-2"
-                                                @onclick="() => DeleteComment(comment)">
-                                            Radera
-                                        </button>
-                                    }
+    @if (CurrentUserService.IsLoggedIn &&
+    (comment.UserId == CurrentUserService.CurrentUser!.Id ||
+     CurrentUserService.CurrentUser.Role == Narrare.Domain.Enums.UserRole.Admin))
+{
+    <button class="btn btn-outline-secondary btn-sm mt-2"
+            @onclick="() => EditComment(comment)">
+        Redigera
+    </button>
+
+    <button class="btn btn-outline-danger btn-sm mt-2"
+            @onclick="() => DeleteComment(comment)">
+        Radera
+    </button>
+}
+} 
                                 }
                                 
                             </div>
                         }
                     }
-
+                    
                     @if (CurrentUserService.IsLoggedIn)
                     {
                         <div class="mt-3">
@@ -383,17 +426,22 @@ else
         {
             return;
         }
+
         var success = await CommentsApiService.DeleteAsync(comment.Id);
 
         if (!success)
         {
             return;
         }
+        
+        // Behåll kommentaren i listan så att
+        // modereringsmeddelandet kan visas.
+        comment.IsDeleted = true;
+        comment.DeletedByUserId = CurrentUserService.CurrentUser!.Id;
+        comment.DeletedAt = DateTime.UtcNow;
 
-        if (comments.TryGetValue(comment.PostId, out var postComments))
-        {
-            postComments.Remove(comment);
-        }
+        // Stäng eventuell redigering.
+        editingComments[comment.Id] = false;
     }
     private void EditPost(PostDto post)
     {
@@ -459,7 +507,7 @@ else
         {
             return;
         }
-        
+
         var success = await PostsApiService.DeleteAsync(post.Id);
 
         if (!success)
@@ -467,9 +515,20 @@ else
             return;
         }
 
-        posts?.Remove(post);
+        // Visa att inlägget har modererats istället för att
+        // ta bort det från listan.
+        post.IsDeleted = true;
+        post.DeletedByUserId = CurrentUserService.CurrentUser!.Id;
+        post.DeletedAt = DateTime.UtcNow;
+
+        // Stäng eventuell redigering.
+        editingPosts[post.Id] = false;
+
+        // Kommentarerna ska inte längre visas.
         comments.Remove(post.Id);
         newCommentContent.Remove(post.Id);
     }
 
 }
+
+    
