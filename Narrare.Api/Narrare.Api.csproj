@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Narrare.Application\Narrare.Application.csproj" />
+    <ProjectReference Include="..\Narrare.Domain\Narrare.Domain.csproj" />
     <ProjectReference Include="..\Narrare.Infrastructure\Narrare.Infrastructure.csproj" />
   </ItemGroup>
 

@@ -1,0 +1,32 @@
+﻿@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject MenuItemsApiService MenuItemsApiService
+
+@if (menuItems != null && menuItems.Count > 0)
+{
+    <nav class="narrare-menu">
+        @foreach (var item in menuItems)
+        {
+            <a href="@item.Url" class="narrare-menu-item">
+                @item.Name
+            </a>
+        }
+    </nav>
+}
+
+@code {
+    private List<MenuItemDto>? menuItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        menuItems = await MenuItemsApiService.GetAllAsync();
+
+        if (menuItems != null)
+        {
+            menuItems = menuItems
+                .OrderBy(x => x.SortOrder)
+                .ToList();
+        }
+    }
+}
