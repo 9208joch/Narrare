@@ -18,6 +18,7 @@ namespace Narrare.Web
             builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.AddScoped<UsersApiService>();
             builder.Services.AddSingleton<CurrentUserService>();
+            builder.Services.AddScoped<MenuItemsApiService>();
             builder.Services.AddHttpClient("NarrareApi", client =>
             {
                 client.BaseAddress = new Uri(

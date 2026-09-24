@@ -18,6 +18,7 @@ public class NarrareDbContext : DbContext
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<MenuItem> MenuItems => Set<MenuItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -58,6 +59,21 @@ public class NarrareDbContext : DbContext
 
             entity.Property(category => category.Description)
                 .HasMaxLength(500);
+        });
+        modelBuilder.Entity<MenuItem>(entity =>
+        {
+            entity.HasKey(menuItem => menuItem.Id);
+
+            entity.Property(menuItem => menuItem.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(menuItem => menuItem.Url)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(menuItem => menuItem.SortOrder)
+                .IsRequired();
         });
 
         modelBuilder.Entity<Post>(entity =>

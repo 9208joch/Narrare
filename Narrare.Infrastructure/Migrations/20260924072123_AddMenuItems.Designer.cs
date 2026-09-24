@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Narrare.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Narrare.Infrastructure.Data;
 namespace Narrare.Infrastructure.Migrations
 {
     [DbContext(typeof(NarrareDbContext))]
-    partial class NarrareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260924072123_AddMenuItems")]
+    partial class AddMenuItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -1,0 +1,286 @@
+﻿@page "/admin/menu"
+
+@using Narrare.Application.DTOs
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject MenuItemsApiService MenuItemsApiService
+@inject CurrentUserService CurrentUserService
+
+<h1>Administrera meny</h1>
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        Du måste vara inloggad som administratör.
+    </div>
+}
+else if (CurrentUserService.CurrentUser!.Role != Narrare.Domain.Enums.UserRole.Admin)
+{
+    <div class="alert alert-danger">
+        Du har inte behörighet att administrera menyn.
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <h3>Skapa menyalternativ</h3>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Namn
+                </label>
+
+                <input class="form-control"
+                       @bind="newMenuItem.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Länk
+                </label>
+
+                <input class="form-control"
+                       @bind="newMenuItem.Url" />
+            </div>
+
+            <button class="btn btn-primary"
+                    @onclick="CreateMenuItem">
+                Lägg till
+            </button>
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            <h3>Menyalternativ</h3>
+
+            @if (menuItems == null)
+            {
+                <p>Laddar...</p>
+            }
+            else if (menuItems.Count == 0)
+            {
+                <p>Det finns inga menyalternativ.</p>
+            }
+            else
+            {
+                @foreach (var item in menuItems)
+                {
+                    <div class="border rounded p-3 mb-2">
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <div>
+                                <strong>
+                                    @item.Name
+                                </strong>
+
+                                <br />
+
+                                <small class="text-muted">
+                                    @item.Url
+                                </small>
+
+                                <br />
+
+                                <small>
+                                    Ordning: @item.SortOrder
+                                </small>
+                            </div>
+
+                            <div>
+
+                                <button class="btn btn-outline-secondary btn-sm me-2"
+                                        @onclick="() => MoveUp(item)">
+                                    ↑
+                                </button>
+
+                                <button class="btn btn-outline-secondary btn-sm me-2"
+                                        @onclick="() => MoveDown(item)">
+                                    ↓
+                                </button>
+
+                                <button class="btn btn-outline-danger btn-sm"
+                                        @onclick="() => DeleteMenuItem(item)">
+                                    Radera
+                                </button>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+                }
+            }
+
+        </div>
+    </div>
+}
+
+@code {
+
+    private List<MenuItemDto>? menuItems;
+
+    private MenuItem newMenuItem = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        await LoadMenuItems();
+    }
+
+    private async Task LoadMenuItems()
+    {
+        menuItems = await MenuItemsApiService.GetAllAsync();
+
+        if (menuItems != null)
+        {
+            menuItems = menuItems
+                .OrderBy(x => x.SortOrder)
+                .ToList();
+        }
+    }
+
+    private async Task CreateMenuItem()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newMenuItem.Name))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newMenuItem.Url))
+        {
+            return;
+        }
+
+        var result =
+            await MenuItemsApiService.CreateAsync(newMenuItem);
+
+        if (result == null)
+        {
+            return;
+        }
+
+        menuItems ??= new List<MenuItemDto>();
+
+        menuItems.Add(result);
+
+        menuItems = menuItems
+            .OrderBy(x => x.SortOrder)
+            .ToList();
+
+        newMenuItem = new MenuItem();
+    }
+
+    private async Task MoveUp(MenuItemDto item)
+    {
+        if (menuItems == null)
+        {
+            return;
+        }
+
+        var index = menuItems.IndexOf(item);
+
+        if (index <= 0)
+        {
+            return;
+        }
+
+        var previousItem = menuItems[index - 1];
+
+        var currentSortOrder = item.SortOrder;
+
+        item.SortOrder = previousItem.SortOrder;
+        previousItem.SortOrder = currentSortOrder;
+
+        await UpdateMenuItem(item);
+        await UpdateMenuItem(previousItem);
+
+        menuItems = menuItems
+            .OrderBy(x => x.SortOrder)
+            .ToList();
+    }
+
+    private async Task MoveDown(MenuItemDto item)
+    {
+        if (menuItems == null)
+        {
+            return;
+        }
+
+        var index = menuItems.IndexOf(item);
+
+        if (index < 0 || index >= menuItems.Count - 1)
+        {
+            return;
+        }
+
+        var nextItem = menuItems[index + 1];
+
+        var currentSortOrder = item.SortOrder;
+
+        item.SortOrder = nextItem.SortOrder;
+        nextItem.SortOrder = currentSortOrder;
+
+        await UpdateMenuItem(item);
+        await UpdateMenuItem(nextItem);
+
+        menuItems = menuItems
+            .OrderBy(x => x.SortOrder)
+            .ToList();
+    }
+
+    private async Task UpdateMenuItem(MenuItemDto item)
+    {
+        var menuItem = new MenuItem
+        {
+            Id = item.Id,
+            Name = item.Name,
+            Url = item.Url,
+            SortOrder = item.SortOrder
+        };
+
+        await MenuItemsApiService.UpdateAsync(
+            item.Id,
+            menuItem);
+    }
+
+    private async Task DeleteMenuItem(MenuItemDto item)
+    {
+        var success =
+            await MenuItemsApiService.DeleteAsync(item.Id);
+
+        if (!success)
+        {
+            return;
+        }
+
+        menuItems?.Remove(item);
+    }
+}
