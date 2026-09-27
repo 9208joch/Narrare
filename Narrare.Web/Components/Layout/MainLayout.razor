@@ -1,11 +1,28 @@
 ﻿@inherits LayoutComponentBase
 
-<Menu />
+<div class="narrare-page">
 
-@Body
+    <header class="narrare-banner">
+        <img src="images/Narrare_Loggo.png" alt="Narrare" />
+    </header>
+
+    <nav class="narrare-menu">
+        <Menu />
+    </nav>
+
+    <main class="narrare-main">
+        @Body
+    </main>
+
+    <footer class="narrare-footer">
+        <img src="images/Narrare_Loggo.png" alt="Narrare" />
+        <p>Narrare – Ett forum för hus och hem</p>
+    </footer>
+
+</div>
 
 <div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
+    Ett fel har inträffat.
+    <a href="." class="reload">Ladda om</a>
     <span class="dismiss">🗙</span>
 </div>

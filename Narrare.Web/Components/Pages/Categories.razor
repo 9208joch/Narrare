@@ -1,0 +1,57 @@
+﻿@page "/categories"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject CategoriesApiService CategoriesApiService
+
+<PageTitle>Kategorier – Narrare</PageTitle>
+
+<div class="page-container">
+
+    <h1>Kategorier</h1>
+
+    <p>
+        Här hittar du Narrares olika kategorier.
+    </p>
+
+    @if (categories == null)
+    {
+        <p>Laddar kategorier...</p>
+    }
+    else if (categories.Count == 0)
+    {
+        <p>Det finns inga kategorier ännu.</p>
+    }
+    else
+    {
+        <div class="category-list">
+
+            @foreach (var category in categories)
+            {
+                <a class="category-card"
+                   href="@($"/categories/{category.Id}")">
+
+                    <h2>@category.Name</h2>
+
+                    <p>
+                        @category.Description
+                    </p>
+
+                </a>
+            }
+
+        </div>
+    }
+
+</div>
+
+@code {
+
+    private List<CategoryDto>? categories;
+
+    protected override async Task OnInitializedAsync()
+    {
+        categories = await CategoriesApiService.GetAllAsync();
+    }
+}

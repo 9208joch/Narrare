@@ -13,7 +13,7 @@ public class NarrareDbContext : DbContext
         : base(options)
     {
     }
-
+    
     public DbSet<User> Users => Set<User>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Post> Posts => Set<Post>();
@@ -59,6 +59,33 @@ public class NarrareDbContext : DbContext
 
             entity.Property(category => category.Description)
                 .HasMaxLength(500);
+
+            entity.HasData(
+                new Category
+                {
+                    Id = 3,
+                    Name = "Kök",
+                    Description = "Diskussioner om kök, matlagning och köksinredning."
+                },
+                new Category
+                {
+                    Id = 4,
+                    Name = "Sovrum",
+                    Description = "Diskussioner om sovrum, sängar och förvaring."
+                },
+                new Category
+                {
+                    Id = 5,
+                    Name = "Badrum",
+                    Description = "Diskussioner om badrum, renovering och inredning."
+                },
+                new Category
+                {
+                    Id = 6,
+                    Name = "Trädgård",
+                    Description = "Diskussioner om trädgård, uteplatser och växter."
+                }
+            );
         });
         modelBuilder.Entity<MenuItem>(entity =>
         {
