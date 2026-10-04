@@ -1,0 +1,36 @@
+﻿@page "/dynamic/{Slug}"
+
+@using Narrare.Web.Services
+@using PageEntity = Narrare.Domain.Entities.Page
+
+@inject PagesApiService PagesApiService
+
+<h1>Dynamic page</h1>
+
+<p>Slug: @Slug</p>
+
+@if (currentPage == null)
+{
+    <p>Laddar sida...</p>
+}
+else
+{
+    <h2>@currentPage.Title</h2>
+
+    <div>
+        @currentPage.Content
+    </div>
+}
+
+@code
+{
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private PageEntity? currentPage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        currentPage = await PagesApiService.GetBySlugAsync(Slug);
+    }
+}

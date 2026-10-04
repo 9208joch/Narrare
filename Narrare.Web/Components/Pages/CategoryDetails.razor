@@ -1,0 +1,553 @@
+﻿@page "/categories/{id:int}"
+
+@using Narrare.Application.DTOs
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject CategoriesApiService CategoriesApiService
+@inject PostsApiService PostsApiService
+@inject CurrentUserService CurrentUserService
+@inject CommentsApiService CommentsApiService
+
+
+
+<PageTitle>Kategori – Narrare</PageTitle>
+
+<div class="page-container">
+
+    @if (category == null)
+    {
+        <p>Laddar kategori...</p>
+    }
+    else
+    {
+        <h1>@category.Name</h1>
+
+        <p>
+            @category.Description
+        </p>
+
+        <hr />
+
+        @if (CurrentUserService.IsLoggedIn)
+        {
+            <div class="card mb-4">
+                <div class="card-body">
+
+                    <h3>Skapa nytt inlägg</h3>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Titel
+                        </label>
+
+                        <input class="form-control"
+                               @bind="newPost.Title" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Innehåll
+                        </label>
+
+                        <textarea class="form-control"
+                                  rows="5"
+                                  @bind="newPost.Content">
+                        </textarea>
+                    </div>
+
+                    <button class="btn btn-primary"
+                            @onclick="CreatePost">
+                        Skapa inlägg
+                    </button>
+
+                </div>
+            </div>
+        }
+
+        <h2>Inlägg</h2>
+
+        @if (posts == null)
+        {
+            <p>Laddar inlägg...</p>
+        }
+        else if (posts.Count == 0)
+        {
+            <p>Det finns inga inlägg i denna kategori ännu.</p>
+        }
+        else
+        {
+            <div class="post-list">
+
+                @foreach (var post in posts)
+                {
+                    <div class="post-card">
+
+                        @if (CurrentUserService.IsLoggedIn &&
+    editingPosts.ContainsKey(post.Id) &&
+    editingPosts[post.Id])
+                        {
+                            <input class="form-control mb-2"
+                                   @bind="editedPostTitles[post.Id]" />
+
+                            <textarea class="form-control mb-2"
+                                      rows="4"
+                                      @bind="editedPostContents[post.Id]"></textarea>
+
+                            <button class="btn btn-success btn-sm me-2"
+                                    @onclick="() => SavePost(post)">
+                                Spara
+                            </button>
+
+                            <button class="btn btn-secondary btn-sm"
+                                    @onclick="() => CancelPostEdit(post.Id)">
+                                Avbryt
+                            </button>
+                        }
+                        else
+                        {
+                            <h3>
+                                @post.Title
+                            </h3>
+
+                            <p>
+                                @post.Content
+                            </p>
+
+                            <small>
+                                Skapad: @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </small>
+
+                            
+                            @if (CurrentUserService.IsLoggedIn &&
+                             (post.UserId == CurrentUserService.CurrentUser!.Id ||
+                             CurrentUserService.CurrentUser.Role == Narrare.Domain.Enums.UserRole.Admin))
+                            {
+                                <div class="mt-2">
+                                    <button class="btn btn-outline-secondary btn-sm me-2"
+                                            @onclick="() => EditPost(post)">
+                                        Redigera
+                                    </button>
+
+                                    <button class="btn btn-outline-danger btn-sm"
+                                            @onclick="() => DeletePost(post)">
+                                        Radera
+                                    </button>
+                                </div>
+                            }
+                        }
+
+                        <hr />
+
+                       <h5>Kommentarer</h5>
+
+@if (!comments.TryGetValue(post.Id, out var postComments))
+{
+    <p>Laddar kommentarer...</p>
+}
+else if (postComments.Count == 0)
+{
+    <p class="text-muted">
+        Inga kommentarer ännu.
+    </p>
+}
+else
+{
+    @foreach (var comment in postComments)
+    {
+        <div class="border rounded p-2 mb-2">
+
+            @if (CurrentUserService.IsLoggedIn &&
+                 editingComments.ContainsKey(comment.Id) &&
+                 editingComments[comment.Id])
+            {
+                <textarea class="form-control mb-2"
+                          rows="3"
+                          @bind="editedCommentContents[comment.Id]">
+                </textarea>
+
+                <button class="btn btn-success btn-sm me-2"
+                        @onclick="() => SaveComment(comment)">
+                    Spara
+                </button>
+
+                <button class="btn btn-secondary btn-sm"
+                        @onclick="() => CancelCommentEdit(comment.Id)">
+                    Avbryt
+                </button>
+            }
+            else
+            {
+                <p class="mb-1">
+                    @comment.Content
+                </p>
+
+                <small class="text-muted">
+                    Skapad:
+                    @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                </small>
+
+                @if (CurrentUserService.IsLoggedIn &&
+                     (comment.UserId == CurrentUserService.CurrentUser!.Id ||
+                      CurrentUserService.CurrentUser.Role == Narrare.Domain.Enums.UserRole.Admin))
+                {
+                    <div class="mt-2">
+                        <button class="btn btn-outline-secondary btn-sm me-2"
+                                @onclick="() => EditComment(comment)">
+                            Redigera
+                        </button>
+
+                        <button class="btn btn-outline-danger btn-sm"
+                                @onclick="() => DeleteComment(comment)">
+                            Radera
+                        </button>
+                    </div>
+                }
+            }
+
+        </div>
+    }
+} 
+                        
+                        
+                        @if (CurrentUserService.IsLoggedIn)
+                        {
+                            <div class="mt-3">
+
+                                <textarea class="form-control"
+                                          rows="2"
+                                          placeholder="Skriv en kommentar..."
+                                          @bind="newCommentContent[post.Id]"></textarea>
+
+                                <button class="btn btn-secondary mt-2"
+                                        @onclick="() => CreateComment(post.Id)">
+                                    Kommentera
+                                </button>
+
+                            </div>
+                        }
+
+                    </div>
+                }
+
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    
+    [Parameter]
+    public int Id { get; set; }
+
+    private CategoryDto? category;
+
+    private List<PostDto>? posts;
+
+    private Post newPost = new();
+
+    private Dictionary<int, List<CommentDto>> comments = new();
+
+    private Dictionary<int, string> newCommentContent = new();
+
+    private Dictionary<int, bool> editingPosts = new();
+
+    private Dictionary<int, string> editedPostTitles = new();
+
+    private Dictionary<int, string> editedPostContents = new();
+
+    private Dictionary<int, bool> editingComments = new();
+
+    private Dictionary<int, string> editedCommentContents = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        category = await CategoriesApiService.GetByIdAsync(Id);
+
+        if (category != null)
+        {
+            posts = await PostsApiService.GetByCategoryAsync(Id);
+
+            foreach (var post in posts)
+            {
+                if (!newCommentContent.ContainsKey(post.Id))
+                {
+                    newCommentContent[post.Id] = "";
+                }
+
+                if (!editedPostTitles.ContainsKey(post.Id))
+                {
+                    editedPostTitles[post.Id] = post.Title;
+                }
+
+                if (!editedPostContents.ContainsKey(post.Id))
+                {
+                    editedPostContents[post.Id] = post.Content;
+                }
+            }
+
+            if (posts != null)
+            {
+                if (posts != null)
+                {
+                    foreach (var post in posts)
+                    {
+                        var postComments =
+                            await CommentsApiService.GetByPostAsync(post.Id);
+
+                        comments[post.Id] =
+                            postComments ?? new List<CommentDto>();
+                    }
+                }
+}
+        }
+    }
+    
+    private async Task CreatePost()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newPost.Title))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newPost.Content))
+        {
+            return;
+        }
+
+        newPost.UserId = CurrentUserService.CurrentUser!.Id;
+
+        newPost.CategoryId = Id;
+
+        var createdPost =
+            await PostsApiService.CreateAsync(newPost);
+
+        if (createdPost == null)
+        {
+            return;
+        }
+
+        posts ??= new List<PostDto>();
+
+        posts.Add(createdPost);
+
+        newCommentContent[createdPost.Id] = "";
+        comments[createdPost.Id] = new List<CommentDto>();
+        editingPosts[createdPost.Id] = false;
+        editedPostTitles[createdPost.Id] = createdPost.Title;
+        editedPostContents[createdPost.Id] = createdPost.Content;
+
+        newPost = new Post();
+    }
+    
+    private async Task CreateComment(int postId)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+        
+        if (!newCommentContent.TryGetValue(postId, out var content)
+            || string.IsNullOrWhiteSpace(content))
+        {
+            return;
+        }
+
+        var comment = new Comment
+        {
+            Content = content,
+            UserId = CurrentUserService.CurrentUser!.Id,
+            PostId = postId
+        };
+
+        var createdComment =
+            await CommentsApiService.CreateAsync(comment);
+
+        if (createdComment == null)
+        {
+            return;
+        }
+
+        if (!comments.ContainsKey(postId))
+        {
+            comments[postId] = new List<CommentDto>();
+        }
+
+        comments[postId].Add(createdComment);
+
+        newCommentContent[postId] = string.Empty;
+    }
+    private void EditComment(CommentDto comment)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        editingComments[comment.Id] = true;
+
+        editedCommentContents[comment.Id] = comment.Content;
+    }
+
+    private void CancelCommentEdit(int commentId)
+    {
+        editingComments[commentId] = false;
+    }
+
+    private async Task SaveComment(CommentDto comment)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (!editedCommentContents.ContainsKey(comment.Id))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(editedCommentContents[comment.Id]))
+        {
+            return;
+        }
+
+        var updatedComment = new Comment
+        {
+            Id = comment.Id,
+            Content = editedCommentContents[comment.Id],
+            UserId = comment.UserId,
+            PostId = comment.PostId
+        };
+
+        var result = await CommentsApiService.UpdateAsync(
+            comment.Id,
+            updatedComment);
+
+        if (result == null)
+        {
+            return;
+        }
+
+        comment.Content = result.Content;
+        comment.UpdatedAt = result.UpdatedAt;
+
+        editingComments[comment.Id] = false;
+    }
+
+    private async Task DeleteComment(CommentDto comment)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (comment.UserId != CurrentUserService.CurrentUser!.Id &&
+            CurrentUserService.CurrentUser.Role != Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        var success = await CommentsApiService.DeleteAsync(comment.Id);
+
+        if (!success)
+        {
+            return;
+        }
+
+        if (comments.TryGetValue(comment.PostId, out var postComments))
+        {
+            postComments.Remove(comment);
+        }
+    }
+    private void EditPost(PostDto post)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        editingPosts[post.Id] = true;
+
+        editedPostTitles[post.Id] = post.Title;
+        editedPostContents[post.Id] = post.Content;
+    }
+    private void CancelPostEdit(int postId)
+    {
+        editingPosts[postId] = false;
+    }
+    private async Task SavePost(PostDto post)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (!editedPostTitles.ContainsKey(post.Id) ||
+            !editedPostContents.ContainsKey(post.Id))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(editedPostTitles[post.Id]))
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(editedPostContents[post.Id]))
+        {
+            return;
+        }
+
+        var updatedPost = new Post
+        {
+            Id = post.Id,
+            Title = editedPostTitles[post.Id],
+            Content = editedPostContents[post.Id],
+            UserId = post.UserId,
+            CategoryId = post.CategoryId
+        };
+
+        var result = await PostsApiService.UpdateAsync(
+            post.Id,
+            updatedPost);
+
+        if (result == null)
+        {
+            return;
+        }
+        
+        post.Title = result.Title;
+        post.Content = result.Content;
+        post.UpdatedAt = result.UpdatedAt;
+
+        editingPosts[post.Id] = false;
+    }
+    private async Task DeletePost(PostDto post)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (post.UserId != CurrentUserService.CurrentUser!.Id &&
+            CurrentUserService.CurrentUser.Role != Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+        
+        var success = await PostsApiService.DeleteAsync(post.Id);
+
+        if (!success)
+        {
+            return;
+        }
+        
+        posts?.Remove(post);
+    }
+}

@@ -1,0 +1,202 @@
+﻿@page "/admin/pages"
+
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject PagesApiService PagesApiService
+@inject CurrentUserService CurrentUserService
+
+<h1>Administrera sidor</h1>
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        Du måste vara inloggad som administratör.
+    </div>
+}
+else if (CurrentUserService.CurrentUser!.Role !=
+         Narrare.Domain.Enums.UserRole.Admin)
+{
+    <div class="alert alert-danger">
+        Du har inte behörighet att administrera sidor.
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <h3>Skapa sida</h3>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Titel
+                </label>
+
+                <input class="form-control"
+                       @bind="newPage.Title" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Slug
+                </label>
+
+                <input class="form-control"
+                       @bind="newPage.Slug" />
+
+                <small class="text-muted">
+                    Exempel: about
+                </small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Innehåll
+                </label>
+
+                <textarea class="form-control"
+                          rows="8"
+                          @bind="newPage.Content">
+                </textarea>
+            </div>
+
+            <button class="btn btn-primary"
+                    @onclick="CreatePage">
+                Skapa sida
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(errorMessage))
+            {
+                <div class="alert alert-danger mt-3">
+                    @errorMessage
+                </div>
+            }
+
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+
+            <h3>Befintliga sidor</h3>
+
+            @if (pages == null)
+            {
+                <p>Laddar...</p>
+            }
+            else if (pages.Count == 0)
+            {
+                <p>Det finns inga sidor ännu.</p>
+            }
+            else
+            {
+                @foreach (var currentPage in pages)
+{
+    <div class="border rounded p-3 mb-2">
+
+        <strong>
+            @currentPage.Title
+        </strong>
+
+        <br />
+
+        <small class="text-muted">
+            Slug: @currentPage.Slug
+        </small>
+
+        <p class="mt-2">
+            @currentPage.Content
+        </p>
+
+        <a class="btn btn-outline-secondary btn-sm"
+           href="/dynamic/@currentPage.Slug">
+            Visa sida
+        </a>
+
+    </div>
+}
+            }
+            
+        </div>
+    </div>
+}
+
+@code
+{
+    private List<Page>? pages;
+
+    private Page newPage = new();
+
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        await LoadPages();
+    }
+
+    private async Task LoadPages()
+    {
+        pages = await PagesApiService.GetAllAsync();
+    }
+
+    private async Task CreatePage()
+    {
+        errorMessage = null;
+
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newPage.Title))
+        {
+            errorMessage = "Titel måste anges.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newPage.Slug))
+        {
+            errorMessage = "Slug måste anges.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newPage.Content))
+        {
+            errorMessage = "Innehåll måste anges.";
+            return;
+        }
+
+        var result =
+            await PagesApiService.CreateAsync(newPage);
+
+        if (result == null)
+        {
+            errorMessage = "Kunde inte skapa sidan.";
+            return;
+        }
+
+        pages ??= new List<Page>();
+
+        pages.Add(result);
+
+        newPage = new Page();
+    }
+}

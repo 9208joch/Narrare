@@ -1,11 +1,66 @@
-﻿<div class="menu-container">
+﻿@using Narrare.Application.DTOs
+@using Narrare.Web.Services
 
-    <a href="/">Hem</a>
+@inject MenuItemsApiService MenuItemsApiService
+@inject CurrentUserService CurrentUserService
 
-    <a href="/categories">Kategorier</a>
+@implements IDisposable
 
-    <a href="/about">Om Narrare</a>
+<div class="menu-container">
 
-    <a href="/login">Logga in</a>
+    @if (menuItems == null)
+    {
+        <span>Laddar meny...</span>
+    }
+    else
+    {
+        
+        @foreach (var menuItem in menuItems)
+        {
+            // Dölj "Logga in" om användaren redan är inloggad
+            if (CurrentUserService.IsLoggedIn &&
+                menuItem.Url == "/login")
+            {
+                continue;
+            }
+
+            <a href="@menuItem.Url">
+                @menuItem.Name
+            </a>
+        }
+
+        @if (CurrentUserService.IsLoggedIn)
+        {
+            <button class="menu-logout"
+                    @onclick="Logout">
+                Logga ut
+            </button>
+        }
+    }
 
 </div>
+
+@code {
+
+    private List<MenuItemDto>? menuItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentUserService.OnChange += OnCurrentUserChanged;
+
+        menuItems = await MenuItemsApiService.GetAllAsync();
+    }
+
+    private void Logout()
+    {
+        CurrentUserService.Logout();
+    }
+    private void OnCurrentUserChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+    public void Dispose()
+    {
+        CurrentUserService.OnChange -= OnCurrentUserChanged;
+    }
+}

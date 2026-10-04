@@ -19,6 +19,7 @@ public class NarrareDbContext : DbContext
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+    public DbSet<Page> Pages => Set<Page>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -101,6 +102,37 @@ public class NarrareDbContext : DbContext
 
             entity.Property(menuItem => menuItem.SortOrder)
                 .IsRequired();
+
+            entity.HasData(
+                new MenuItem
+                {
+                    Id = 1,
+                    Name = "Hem",
+                    Url = "/",
+                    SortOrder = 1
+                },
+                new MenuItem
+                {
+                    Id = 2,
+                    Name = "Kategorier",
+                    Url = "/categories",
+                    SortOrder = 2
+                },
+                new MenuItem
+                {
+                    Id = 3,
+                    Name = "Om Narrare",
+                    Url = "/about",
+                    SortOrder = 3
+                },
+                new MenuItem
+                {
+                    Id = 4,
+                    Name = "Logga in",
+                    Url = "/login",
+                    SortOrder = 4
+                }
+            );
         });
 
         modelBuilder.Entity<Post>(entity =>
@@ -141,6 +173,24 @@ public class NarrareDbContext : DbContext
                 .WithMany(post => post.Comments)
                 .HasForeignKey(comment => comment.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<Page>(entity =>
+        {
+            entity.HasKey(page => page.Id);
+
+            entity.Property(page => page.Title)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(page => page.Slug)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(page => page.Content)
+                .IsRequired();
+
+            entity.HasIndex(page => page.Slug)
+                .IsUnique();
         });
     }
 }

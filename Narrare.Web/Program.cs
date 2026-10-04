@@ -18,17 +18,23 @@ namespace Narrare.Web
             builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.AddScoped<UsersApiService>();
             builder.Services.AddSingleton<CurrentUserService>();
+            builder.Services.AddScoped<ApiService>();
+            builder.Services.AddScoped<PostsApiService>();
+            builder.Services.AddScoped<CommentsApiService>();
             builder.Services.AddScoped<MenuItemsApiService>();
+            builder.Services.AddScoped<PagesApiService>();
             builder.Services.AddScoped<CategoriesApiService>();
+            
+
+
+
             builder.Services.AddHttpClient("NarrareApi", client =>
             {
                 client.BaseAddress = new Uri(
                     builder.Configuration["ApiSettings:BaseUrl"]!
                 );
             });
-            builder.Services.AddScoped<ApiService>();
-            builder.Services.AddScoped<PostsApiService>();
-            builder.Services.AddScoped<CommentsApiService>();
+            
 
             // Add services to the container.
             builder.Services.AddRazorComponents()

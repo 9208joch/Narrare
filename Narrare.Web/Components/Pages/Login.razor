@@ -17,7 +17,7 @@
             <input class="form-control"
                    @bind="login.Username" />
         </div>
-
+        
         <div class="mb-3">
             <label class="form-label">Lösenord</label>
 
@@ -59,7 +59,7 @@
     private UserDto? loggedInUser;
 
     private string? errorMessage;
-
+    
     private async Task LoginUser()
     {
         errorMessage = null;
@@ -72,6 +72,12 @@
             errorMessage = "Fel användarnamn eller lösenord.";
             return;
         }
+
+        errorMessage = "Inloggning lyckades.";
+
+        CurrentUserService.Login(result);
+
+        loggedInUser = result;
 
         CurrentUserService.Login(result);
 

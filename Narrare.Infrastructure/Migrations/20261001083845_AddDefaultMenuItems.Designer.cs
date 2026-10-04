@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Narrare.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using Narrare.Infrastructure.Data;
 namespace Narrare.Infrastructure.Migrations
 {
     [DbContext(typeof(NarrareDbContext))]
-    partial class NarrareDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261001083845_AddDefaultMenuItems")]
+    partial class AddDefaultMenuItems
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -166,36 +169,6 @@ namespace Narrare.Infrastructure.Migrations
                             SortOrder = 4,
                             Url = "/login"
                         });
-                });
-
-            modelBuilder.Entity("Narrare.Domain.Entities.Page", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Slug")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("Title")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Slug")
-                        .IsUnique();
-
-                    b.ToTable("Pages");
                 });
 
             modelBuilder.Entity("Narrare.Domain.Entities.Post", b =>

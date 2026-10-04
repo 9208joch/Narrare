@@ -10,13 +10,14 @@ namespace Narrare.Application;
 public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(
-        this IServiceCollection services)
+    this IServiceCollection services)
     {
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IMenuItemService, MenuItemService>();
+        services.AddScoped<IPageService, PageService>();
 
         return services;
     }
