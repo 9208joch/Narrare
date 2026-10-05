@@ -48,6 +48,18 @@ public class PagesController : ControllerBase
 
         return Ok(page);
     }
+    [HttpPost("{id:int}/visit")]
+    public async Task<IActionResult> IncrementVisitCount(int id)
+    {
+        var success = await _pageService.IncrementVisitCountAsync(id);
+
+        if (!success)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
 
     [HttpPost]
     public async Task<ActionResult<Page>> Create([FromBody] Page page)

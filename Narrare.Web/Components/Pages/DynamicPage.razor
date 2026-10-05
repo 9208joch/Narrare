@@ -1,26 +1,30 @@
-﻿@page "/dynamic/{Slug}"
+﻿@page "/pages/{Slug}"
 
 @using Narrare.Web.Services
 @using PageEntity = Narrare.Domain.Entities.Page
 
 @inject PagesApiService PagesApiService
 
-<h1>Dynamic page</h1>
+<div class="page-container">
 
-<p>Slug: @Slug</p>
+    @if (currentPage == null)
+    {
+        <p>Laddar sida...</p>
+    }
+    else
+    {
+        <h1>@currentPage.Title</h1>
 
-@if (currentPage == null)
-{
-    <p>Laddar sida...</p>
-}
-else
-{
-    <h2>@currentPage.Title</h2>
+        <p>
+            @currentPage.Content
+        </p>
 
-    <div>
-        @currentPage.Content
-    </div>
-}
+        <p class="text-muted">
+            Besökare: @currentPage.VisitCount
+        </p>
+    }
+
+</div>
 
 @code
 {
@@ -29,8 +33,24 @@ else
 
     private PageEntity? currentPage;
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
+        // Hämta sidan
         currentPage = await PagesApiService.GetBySlugAsync(Slug);
+
+        if (currentPage == null)
+        {
+            return;
+        }
+
+        // Öka besöksräknaren
+        var success =
+            await PagesApiService.IncrementVisitCountAsync(currentPage.Id);
+
+        if (success)
+        {
+            // Uppdatera även objektet som visas på sidan
+            currentPage.VisitCount++;
+        }
     }
 }

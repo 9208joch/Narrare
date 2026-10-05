@@ -14,7 +14,6 @@
     }
     else
     {
-        
         @foreach (var menuItem in menuItems)
         {
             // Dölj "Logga in" om användaren redan är inloggad
@@ -31,6 +30,15 @@
 
         @if (CurrentUserService.IsLoggedIn)
         {
+            @if (CurrentUserService.CurrentUser!.Role ==
+                 Narrare.Domain.Enums.UserRole.Admin)
+            {
+                <a class="menu-admin"
+                   href="/admin/pages">
+                    Admin
+                </a>
+            }
+
             <button class="menu-logout"
                     @onclick="Logout">
                 Logga ut
@@ -55,10 +63,12 @@
     {
         CurrentUserService.Logout();
     }
+
     private void OnCurrentUserChanged()
     {
         InvokeAsync(StateHasChanged);
     }
+
     public void Dispose()
     {
         CurrentUserService.OnChange -= OnCurrentUserChanged;

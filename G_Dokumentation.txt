@@ -8,3 +8,14 @@ grön justerad till #96F90F
 
 <autoriserad> ?? kolla över
 slugg se över presentation 
+
+
+
+
+Innehåll på Pages
+Bilder och länkar
+Enkel CSS-administration
+Besöksräknare
+Responsivitet
+komm ihår admin knapp
+fixa markerad text vid start

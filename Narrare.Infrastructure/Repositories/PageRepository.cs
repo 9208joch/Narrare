@@ -80,4 +80,20 @@ public class PageRepository : IPageRepository
 
         return true;
     }
+    public async Task<bool> IncrementVisitCountAsync(int id)
+    {
+        var page = await _context.Pages
+            .FirstOrDefaultAsync(x => x.Id == id);
+
+        if (page == null)
+        {
+            return false;
+        }
+
+        page.VisitCount++;
+
+        await _context.SaveChangesAsync();
+
+        return true;
+    }
 }

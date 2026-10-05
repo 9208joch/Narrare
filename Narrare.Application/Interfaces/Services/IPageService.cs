@@ -18,4 +18,6 @@ public interface IPageService
     Task<Page?> UpdateAsync(Page page);
 
     Task<bool> DeleteAsync(int id);
+
+    Task<bool> IncrementVisitCountAsync(int id);
 }
