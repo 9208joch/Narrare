@@ -24,7 +24,8 @@ namespace Narrare.Web
             builder.Services.AddScoped<MenuItemsApiService>();
             builder.Services.AddScoped<PagesApiService>();
             builder.Services.AddScoped<CategoriesApiService>();
-            
+            builder.Services.AddScoped<PageContentApiService>();
+
 
 
 

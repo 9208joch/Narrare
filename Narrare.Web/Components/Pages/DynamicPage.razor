@@ -1,9 +1,10 @@
 ﻿@page "/pages/{Slug}"
 
+@using Narrare.Domain.Entities
 @using Narrare.Web.Services
-@using PageEntity = Narrare.Domain.Entities.Page
 
 @inject PagesApiService PagesApiService
+@inject PageContentApiService PageContentApiService
 
 <div class="page-container">
 
@@ -15,11 +16,50 @@
     {
         <h1>@currentPage.Title</h1>
 
-        <p>
-            @currentPage.Content
-        </p>
+        @if (contents == null)
+        {
+            <p>Laddar innehåll...</p>
+        }
+        else if (contents.Count == 0)
+        {
+            <p>@currentPage.Content</p>
+        }
+        else
+        {
+            @foreach (var content in contents)
+            {
+                @switch (content.Type.ToLower())
+                {
+                    case "heading":
+                        <h2>@content.Content</h2>
+                        break;
 
-        <p class="text-muted">
+                    case "text":
+                        <p>@content.Content</p>
+                        break;
+
+                    case "image":
+                        <img src="@content.Content"
+                             alt="@currentPage.Title"
+                             class="page-image" />
+                        break;
+
+                    case "link":
+                        <a href="@content.Content"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            @content.Content
+                        </a>
+                        break;
+
+                    default:
+                        <p>@content.Content</p>
+                        break;
+                }
+            }
+        }
+
+        <p class="text-muted mt-4">
             Besökare: @currentPage.VisitCount
         </p>
     }
@@ -31,10 +71,15 @@
     [Parameter]
     public string Slug { get; set; } = string.Empty;
 
-    private PageEntity? currentPage;
+    private Page? currentPage;
+
+    private List<PageContent>? contents;
 
     protected override async Task OnParametersSetAsync()
     {
+        currentPage = null;
+        contents = null;
+
         // Hämta sidan
         currentPage = await PagesApiService.GetBySlugAsync(Slug);
 
@@ -49,8 +94,12 @@
 
         if (success)
         {
-            // Uppdatera även objektet som visas på sidan
+            // Uppdatera värdet som visas utan ett extra API-anrop
             currentPage.VisitCount++;
         }
+
+        // Hämta innehållet till sidan
+        contents =
+            await PageContentApiService.GetByPageIdAsync(currentPage.Id);
     }
 }

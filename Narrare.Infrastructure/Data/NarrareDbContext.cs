@@ -20,6 +20,7 @@ public class NarrareDbContext : DbContext
     public DbSet<Comment> Comments => Set<Comment>();
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
     public DbSet<Page> Pages => Set<Page>();
+    public DbSet<PageContent> PageContents { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -193,4 +194,4 @@ public class NarrareDbContext : DbContext
                 .IsUnique();
         });
     }
-}
+} 

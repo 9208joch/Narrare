@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<ICommentService, CommentService>();
         services.AddScoped<IMenuItemService, MenuItemService>();
         services.AddScoped<IPageService, PageService>();
+        services.AddScoped<IPageContentService, PageContentService>();
 
         return services;
     }

@@ -179,6 +179,16 @@ else
             return;
         }
 
+        if (menuItems != null && menuItems.Count > 0)
+        {
+            newMenuItem.SortOrder =
+                menuItems.Max(x => x.SortOrder) + 1;
+        }
+        else
+        {
+            newMenuItem.SortOrder = 1;
+        }
+
         var result =
             await MenuItemsApiService.CreateAsync(newMenuItem);
 
@@ -255,7 +265,7 @@ else
             .OrderBy(x => x.SortOrder)
             .ToList();
     }
-
+    
     private async Task UpdateMenuItem(MenuItemDto item)
     {
         var menuItem = new MenuItem

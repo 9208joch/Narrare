@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddScoped<ICommentRepository, CommentRepository>();
         services.AddScoped<IMenuItemRepository, MenuItemRepository>();
         services.AddScoped<IPageRepository, PageRepository>();
+        services.AddScoped<IPageContentRepository, PageContentRepository>();
 
 
         return services;

@@ -23,6 +23,8 @@ else if (CurrentUserService.CurrentUser!.Role !=
 }
 else
 {
+    <!-- Skapa sida -->
+
     <div class="card mb-4">
         <div class="card-body">
 
@@ -76,6 +78,9 @@ else
         </div>
     </div>
 
+
+    <!-- Befintliga sidor -->
+
     <div class="card">
         <div class="card-body">
 
@@ -87,40 +92,47 @@ else
             }
             else if (pages.Count == 0)
             {
-                <p>Det finns inga sidor ännu.</p>
+                <p>
+                    Det finns inga sidor ännu.
+                </p>
             }
             else
             {
                 @foreach (var currentPage in pages)
-{
-    <div class="border rounded p-3 mb-2">
+                {
+                    <div class="border rounded p-3 mb-2">
 
-        <strong>
-            @currentPage.Title
-        </strong>
+                        <strong>
+                            @currentPage.Title
+                        </strong>
 
-        <br />
+                        <br />
 
-        <small class="text-muted">
-            Slug: @currentPage.Slug
-        </small>
+                        <small class="text-muted">
+                            Slug: @currentPage.Slug
+                        </small>
 
-        <p class="mt-2">
-            @currentPage.Content
-        </p>
+                        <p class="mt-2">
+                            @currentPage.Content
+                        </p>
+
+                        <p class="text-muted">
+                            Besökare: @currentPage.VisitCount
+                        </p>
 
                         <a class="btn btn-outline-secondary btn-sm"
                            href="/pages/@currentPage.Slug">
                             Visa sida
                         </a>
 
-    </div>
-}
+                    </div>
+                }
             }
-            
+
         </div>
     </div>
 }
+
 
 @code
 {
@@ -129,6 +141,7 @@ else
     private Page newPage = new();
 
     private string? errorMessage;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -146,10 +159,12 @@ else
         await LoadPages();
     }
 
+
     private async Task LoadPages()
     {
         pages = await PagesApiService.GetAllAsync();
     }
+
 
     private async Task CreatePage()
     {
