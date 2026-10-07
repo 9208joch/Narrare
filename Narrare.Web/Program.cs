@@ -25,8 +25,9 @@ namespace Narrare.Web
             builder.Services.AddScoped<PagesApiService>();
             builder.Services.AddScoped<CategoriesApiService>();
             builder.Services.AddScoped<PageContentApiService>();
+            builder.Services.AddScoped<SiteStyleApiService>();
 
-
+            
 
 
             builder.Services.AddHttpClient("NarrareApi", client =>

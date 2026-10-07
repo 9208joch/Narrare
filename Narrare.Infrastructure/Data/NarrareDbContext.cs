@@ -124,7 +124,7 @@ public class NarrareDbContext : DbContext
                 {
                     Id = 3,
                     Name = "Om Narrare",
-                    Url = "/about",
+                    Url = "/pages/about",
                     SortOrder = 3
                 },
                 new MenuItem

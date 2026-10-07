@@ -10,7 +10,7 @@ public class SiteStyleApiService
     {
         _apiService = apiService;
     }
-
+    
     public async Task<SiteStyle?> GetAsync()
     {
         return await _apiService.GetAsync<SiteStyle>(

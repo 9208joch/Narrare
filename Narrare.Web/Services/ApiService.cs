@@ -33,7 +33,14 @@ public class ApiService
 
         AddUserIdHeader(client);
 
-        return await client.GetFromJsonAsync<T>(url);
+        var response = await client.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<T>();
     }
 
     public async Task<TResponse?> PostAsync<TRequest, TResponse>(
