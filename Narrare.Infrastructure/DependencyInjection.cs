@@ -30,6 +30,7 @@ public static class DependencyInjection
         services.AddScoped<IMenuItemRepository, MenuItemRepository>();
         services.AddScoped<IPageRepository, PageRepository>();
         services.AddScoped<IPageContentRepository, PageContentRepository>();
+        services.AddScoped<ISiteStyleRepository, SiteStyleRepository>();
 
 
         return services;

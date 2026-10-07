@@ -25,7 +25,6 @@ else
 {
     <div class="card mb-4">
         <div class="card-body">
-
             <h3>Välj sida</h3>
 
             <select class="form-select"
@@ -45,9 +44,7 @@ else
                         </option>
                     }
                 }
-
             </select>
-
         </div>
     </div>
 
@@ -55,40 +52,27 @@ else
     {
         <div class="card mb-4">
             <div class="card-body">
-
-                <h3>Lägg till innehåll</h3>
+                <h3>
+                    @(editingContent == null
+                        ? "Lägg till innehåll"
+                        : "Redigera innehåll")
+                </h3>
 
                 <div class="mb-3">
-                    <label class="form-label">
-                        Typ
-                    </label>
+                    <label class="form-label">Typ</label>
 
                     <select class="form-select"
                             @bind="newContent.Type">
 
-                        <option value="text">
-                            Text
-                        </option>
-
-                        <option value="heading">
-                            Rubrik
-                        </option>
-
-                        <option value="image">
-                            Bild
-                        </option>
-
-                        <option value="link">
-                            Länk
-                        </option>
-
+                        <option value="text">Text</option>
+                        <option value="heading">Rubrik</option>
+                        <option value="image">Bild</option>
+                        <option value="link">Länk</option>
                     </select>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">
-                        Innehåll
-                    </label>
+                    <label class="form-label">Innehåll</label>
 
                     <textarea class="form-control"
                               rows="5"
@@ -97,19 +81,32 @@ else
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label">
-                        Ordning
-                    </label>
+                    <label class="form-label">Ordning</label>
 
                     <input class="form-control"
                            type="number"
                            @bind="newContent.Order" />
                 </div>
 
-                <button class="btn btn-primary"
-                        @onclick="CreateContent">
-                    Lägg till innehåll
-                </button>
+                @if (editingContent == null)
+                {
+                    <button class="btn btn-primary"
+                            @onclick="CreateContent">
+                        Lägg till innehåll
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-success me-2"
+                            @onclick="UpdateContent">
+                        Spara ändringar
+                    </button>
+
+                    <button class="btn btn-secondary"
+                            @onclick="CancelEdit">
+                        Avbryt
+                    </button>
+                }
 
                 @if (!string.IsNullOrWhiteSpace(errorMessage))
                 {
@@ -117,13 +114,11 @@ else
                         @errorMessage
                     </div>
                 }
-
             </div>
         </div>
 
         <div class="card">
             <div class="card-body">
-
                 <h3>Befintligt innehåll</h3>
 
                 @if (contents == null)
@@ -132,9 +127,7 @@ else
                 }
                 else if (contents.Count == 0)
                 {
-                    <p>
-                        Det finns inget innehåll på denna sida ännu.
-                    </p>
+                    <p>Det finns inget innehåll på denna sida ännu.</p>
                 }
                 else
                 {
@@ -156,6 +149,11 @@ else
                                 @content.Content
                             </p>
 
+                            <button class="btn btn-outline-primary btn-sm me-2"
+                                    @onclick="() => EditContent(content)">
+                                Redigera
+                            </button>
+
                             <button class="btn btn-outline-danger btn-sm"
                                     @onclick="() => DeleteContent(content.Id)">
                                 Radera
@@ -164,7 +162,6 @@ else
                         </div>
                     }
                 }
-
             </div>
         </div>
     }
@@ -174,10 +171,11 @@ else
 {
     private List<Page>? pages;
 
-    private List<Narrare.Domain.Entities.PageContent>? contents;
+    private List<PageContent>? contents;
 
-    private Narrare.Domain.Entities.PageContent newContent =
-        new();
+    private PageContent newContent = new();
+
+    private PageContent? editingContent;
 
     private int selectedPageId;
 
@@ -202,8 +200,8 @@ else
     private async Task LoadPageContent()
     {
         errorMessage = null;
-
         contents = null;
+        editingContent = null;
 
         if (selectedPageId <= 0)
         {
@@ -214,14 +212,18 @@ else
             await PageContentApiService.GetByPageIdAsync(
                 selectedPageId);
 
-        if (contents == null)
-        {
-            contents = new List<Narrare.Domain.Entities.PageContent>();
-        }
+        contents ??= new List<PageContent>();
 
         contents = contents
             .OrderBy(x => x.Order)
             .ToList();
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents.Count + 1
+        };
     }
 
     private async Task CreateContent()
@@ -251,8 +253,7 @@ else
             return;
         }
 
-        contents ??=
-            new List<Narrare.Domain.Entities.PageContent>();
+        contents ??= new List<PageContent>();
 
         contents.Add(result);
 
@@ -260,7 +261,7 @@ else
             .OrderBy(x => x.Order)
             .ToList();
 
-        newContent = new Narrare.Domain.Entities.PageContent
+        newContent = new PageContent
         {
             PageId = selectedPageId,
             Type = "text",
@@ -268,8 +269,91 @@ else
         };
     }
 
+    private void EditContent(PageContent content)
+    {
+        editingContent = content;
+
+        newContent = new PageContent
+        {
+            Id = content.Id,
+            PageId = content.PageId,
+            Type = content.Type,
+            Content = content.Content,
+            Order = content.Order
+        };
+
+        errorMessage = null;
+    }
+
+    private async Task UpdateContent()
+    {
+        errorMessage = null;
+
+        if (editingContent == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newContent.Content))
+        {
+            errorMessage = "Innehåll måste anges.";
+            return;
+        }
+
+        var result =
+            await PageContentApiService.UpdateAsync(
+                editingContent.Id,
+                newContent);
+
+        if (result == null)
+        {
+            errorMessage = "Kunde inte uppdatera innehållet.";
+            return;
+        }
+
+        if (contents != null)
+        {
+            var index = contents.FindIndex(
+                x => x.Id == editingContent.Id);
+
+            if (index >= 0)
+            {
+                contents[index] = result;
+
+                contents = contents
+                    .OrderBy(x => x.Order)
+                    .ToList();
+            }
+        }
+
+        editingContent = null;
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents?.Count + 1 ?? 1
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingContent = null;
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents?.Count + 1 ?? 1
+        };
+
+        errorMessage = null;
+    }
+
     private async Task DeleteContent(int id)
     {
+        errorMessage = null;
+
         var success =
             await PageContentApiService.DeleteAsync(id);
 
@@ -288,6 +372,11 @@ else
             {
                 contents.Remove(content);
             }
+        }
+
+        if (editingContent?.Id == id)
+        {
+            CancelEdit();
         }
     }
 }

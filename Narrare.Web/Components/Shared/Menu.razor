@@ -6,6 +6,7 @@
 
 @implements IDisposable
 
+
 <div class="menu-container">
 
     @if (menuItems == null)
@@ -16,29 +17,29 @@
     {
         @foreach (var menuItem in menuItems)
         {
-            // Dölj "Logga in" om användaren redan är inloggad
             if (CurrentUserService.IsLoggedIn &&
                 menuItem.Url == "/login")
             {
                 continue;
             }
-
+            
             <a href="@menuItem.Url">
                 @menuItem.Name
             </a>
         }
 
+        @if (CurrentUserService.IsLoggedIn &&
+             CurrentUserService.CurrentUser!.Role ==
+             Narrare.Domain.Enums.UserRole.Admin)
+        {
+            <a class="menu-admin"
+               href="/admin">
+                Administration
+            </a>
+        }
+
         @if (CurrentUserService.IsLoggedIn)
         {
-            @if (CurrentUserService.CurrentUser!.Role ==
-                 Narrare.Domain.Enums.UserRole.Admin)
-            {
-                <a class="menu-admin"
-                   href="/admin/pages">
-                    Admin
-                </a>
-            }
-
             <button class="menu-logout"
                     @onclick="Logout">
                 Logga ut
@@ -48,15 +49,16 @@
 
 </div>
 
-@code {
-
+@code
+{
     private List<MenuItemDto>? menuItems;
 
     protected override async Task OnInitializedAsync()
     {
         CurrentUserService.OnChange += OnCurrentUserChanged;
 
-        menuItems = await MenuItemsApiService.GetAllAsync();
+        menuItems =
+            await MenuItemsApiService.GetAllAsync();
     }
 
     private void Logout()

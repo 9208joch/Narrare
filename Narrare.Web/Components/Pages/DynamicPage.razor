@@ -5,8 +5,41 @@
 
 @inject PagesApiService PagesApiService
 @inject PageContentApiService PageContentApiService
+@inject SiteStyleApiService SiteStyleApiService
+
+
 
 <div class="page-container">
+
+    @if (siteStyle != null)
+    {
+        <style>
+                .dynamic-page-heading {
+                    font-size: @(siteStyle.HeadingFontSize)px;
+                    font-weight: @(siteStyle.HeadingBold ? "bold" : "normal");
+                    color: @siteStyle.HeadingColor;
+                    margin-bottom: @(siteStyle.HeadingMarginBottom)px;
+                }
+
+                .dynamic-page-text {
+                    font-size: @(siteStyle.TextFontSize)px;
+                    color: @siteStyle.TextColor;
+                    line-height: @siteStyle.TextLineHeight;
+                    margin-bottom: @(siteStyle.TextMarginBottom)px;
+                }
+
+                .dynamic-page-image {
+                    max-width: @(siteStyle.ImageMaxWidth)%;
+                    border-radius: @(siteStyle.ImageBorderRadius)px;
+                }
+
+                .dynamic-page-link {
+                    color: @siteStyle.LinkColor;
+                    font-weight: @(siteStyle.LinkBold ? "bold" : "normal");
+                    text-decoration: @(siteStyle.LinkUnderline ? "underline" : "none");
+                }
+        </style>
+    }
 
     @if (currentPage == null)
     {
@@ -75,11 +108,14 @@
 
     private List<PageContent>? contents;
 
+    private SiteStyle? siteStyle;
+
     protected override async Task OnParametersSetAsync()
     {
         currentPage = null;
         contents = null;
-
+        siteStyle = null;
+        
         // Hämta sidan
         currentPage = await PagesApiService.GetBySlugAsync(Slug);
 
@@ -97,9 +133,13 @@
             // Uppdatera värdet som visas utan ett extra API-anrop
             currentPage.VisitCount++;
         }
-
+        
         // Hämta innehållet till sidan
         contents =
             await PageContentApiService.GetByPageIdAsync(currentPage.Id);
+
+        // Hämta webbplatsens styling
+        siteStyle =
+            await SiteStyleApiService.GetAsync();
     }
 }

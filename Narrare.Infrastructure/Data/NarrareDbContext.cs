@@ -21,6 +21,7 @@ public class NarrareDbContext : DbContext
     public DbSet<MenuItem> MenuItems => Set<MenuItem>();
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<PageContent> PageContents { get; set; }
+    public DbSet<SiteStyle> SiteStyles { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
