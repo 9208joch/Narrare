@@ -18,10 +18,18 @@ public class PostRepository : Repository<Post>, IPostRepository
         _context = context;
     }
 
+    public async Task<List<Post>> GetAllAsync()
+    {
+        return await _context.Posts
+            .OrderByDescending(post => post.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<List<Post>> GetByCategoryAsync(int categoryId)
     {
         return await _context.Posts
             .Where(post => post.CategoryId == categoryId)
+            .OrderByDescending(post => post.CreatedAt)
             .ToListAsync();
     }
 }

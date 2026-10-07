@@ -5,6 +5,7 @@
 
 @inject UsersApiService UsersApiService
 @inject CurrentUserService CurrentUserService
+@inject NavigationManager NavigationManager
 
 <h1 class="mb-4">Logga in</h1>
 
@@ -26,10 +27,20 @@
                    @bind="login.Password" />
         </div>
         
-        <button class="btn btn-primary"
-                @onclick="LoginUser">
-            Logga in
-        </button>
+        @if (loggedInUser == null)
+        {
+            <button class="btn btn-primary"
+                    @onclick="LoginUser">
+                Logga in
+            </button>
+        }
+        else
+        {
+            <button class="btn btn-secondary"
+                    @onclick="Logout">
+                Logga ut
+            </button>
+        }
 
         @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
@@ -43,10 +54,7 @@
             <div class="alert alert-success mt-3">
                 <p>Välkommen, @loggedInUser.Username!</p>
 
-                <button class="btn btn-secondary"
-                        @onclick="Logout">
-                    Logga ut
-                </button>
+                
             </div>
         }
 
@@ -73,14 +81,8 @@
             return;
         }
 
-        errorMessage = "Inloggning lyckades.";
-
         CurrentUserService.Login(result);
-
-        loggedInUser = result;
-
-        CurrentUserService.Login(result);
-
+        
         loggedInUser = result;
     }
     private void Logout()
@@ -89,5 +91,7 @@
 
         loggedInUser = null;
         login = new LoginUserDto();
+
+        NavigationManager.NavigateTo("/");
     }
 }

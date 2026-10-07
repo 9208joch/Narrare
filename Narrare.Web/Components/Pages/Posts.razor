@@ -7,7 +7,7 @@
 @inject PostsApiService PostsApiService
 @inject CommentsApiService CommentsApiService
 @inject CurrentUserService CurrentUserService
-
+@inject NavigationManager NavigationManager
 <h1 class="mb-4">Narrare</h1>
 @if (CurrentUserService.IsLoggedIn)
 {
@@ -56,6 +56,7 @@ else
 }
 
 
+
 <!-- Inlägg -->
 @if (posts == null)
 {
@@ -65,12 +66,15 @@ else if (posts.Count == 0)
 {
     <p>Inga inlägg hittades.</p>
 }
-else 
+else
 {
+    
     @foreach (var post in posts)
     {
-        <div class="card mb-4">
+        <div @key="post.Id" class="card mb-4">
             <div class="card-body">
+
+                ...
 
                 @if (CurrentUserService.IsLoggedIn
                   && editingPosts.ContainsKey(post.Id)
@@ -305,30 +309,45 @@ else
     }
 
     
-    private async Task CreatePost()
+private async Task CreatePost()
 {
     if (!CurrentUserService.IsLoggedIn)
     {
         return;
     }
-        
+
     newPost.UserId = CurrentUserService.CurrentUser!.Id;
 
     var createdPost =
         await PostsApiService.CreateAsync(newPost);
 
+
     if (createdPost == null)
     {
         return;
     }
+        
+    // Hämta alla inlägg igen.
+    // API:t sorterar dem efter CreatedAt, nyast först.
+        posts = await PostsApiService.GetAllAsync();
 
-    posts ??= new List<PostDto>();
+        if (posts != null)
+        {
+            posts = posts
+                .OrderByDescending(post => post.CreatedAt)
+                .ToList();
+        }
 
-    posts.Add(createdPost);
-
+    if (posts == null)
+    {
+        return;
+    }
+        
     comments[createdPost.Id] =
         new List<CommentDto>();
-        newCommentContent[createdPost.Id] = string.Empty;
+
+    newCommentContent[createdPost.Id] =
+        string.Empty;
 
     newPost = new Post
     {
@@ -530,5 +549,8 @@ else
     }
 
 }
+
+
+
 
     

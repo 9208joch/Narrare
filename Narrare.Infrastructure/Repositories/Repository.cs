@@ -32,7 +32,7 @@ public class Repository<T> : IRepository<T> where T : class
     {
         await _dbSet.AddAsync(entity);
     }
-
+    
     public void Update(T entity)
     {
         _dbSet.Update(entity);

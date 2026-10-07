@@ -3,6 +3,7 @@
 
 @inject MenuItemsApiService MenuItemsApiService
 @inject CurrentUserService CurrentUserService
+@inject NavigationManager NavigationManager
 
 @implements IDisposable
 
@@ -15,6 +16,7 @@
     }
     else
     {
+        
         @foreach (var menuItem in menuItems)
         {
             if (CurrentUserService.IsLoggedIn &&
@@ -64,6 +66,8 @@
     private void Logout()
     {
         CurrentUserService.Logout();
+
+        NavigationManager.NavigateTo("/");
     }
 
     private void OnCurrentUserChanged()

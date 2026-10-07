@@ -5,3 +5,4 @@ vanlig admin= edditera och ta bort
 master admin? kattegorier roller 2a hand kontroll?
 se över sidoformatering och namn
 seeda antal besökare
+sortera inlägg

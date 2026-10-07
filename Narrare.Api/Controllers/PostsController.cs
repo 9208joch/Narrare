@@ -40,13 +40,14 @@ public class PostsController : ControllerBase
     public async Task<ActionResult<PostDto>> Create([FromBody] Post post)
     {
         var currentUserId = GetCurrentUserId();
-
+        
         if (currentUserId == null)
         {
             return Unauthorized();
         }
 
         post.UserId = currentUserId.Value;
+        post.CreatedAt = DateTime.UtcNow;
 
         var createdPost = await _postService.CreateAsync(post);
 

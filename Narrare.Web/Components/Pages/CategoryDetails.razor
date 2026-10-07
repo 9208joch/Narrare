@@ -335,7 +335,7 @@ else
 
         posts ??= new List<PostDto>();
 
-        posts.Add(createdPost);
+        posts.Insert(0, createdPost);
 
         newCommentContent[createdPost.Id] = "";
         comments[createdPost.Id] = new List<CommentDto>();
@@ -534,7 +534,7 @@ else
         {
             return;
         }
-
+        
         if (post.UserId != CurrentUserService.CurrentUser!.Id &&
             CurrentUserService.CurrentUser.Role != Narrare.Domain.Enums.UserRole.Admin)
         {
