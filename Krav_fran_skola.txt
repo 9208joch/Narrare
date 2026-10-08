@@ -52,7 +52,7 @@ Inlämningsuppgift – Public - VG
 ◦ Möjlighet att infoga plugins, I eget definierat format, som är helt obundet till Public kodmässigt.
 ◦ Exempelvis:
 ◦ Visa besöksräknare
-◦ Bildgalleri
+◦ Bildgalleri	(+bilder)
 ◦ Väder
 ◦ SEO-anpassad URL/URI för sajtens sidor
 ◦ Det finns utrymme för egna ideér och funktioner.

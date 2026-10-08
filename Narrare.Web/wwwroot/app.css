@@ -30,21 +30,19 @@ body {
 
 .narrare-banner {
     background-color: #96F90F;
-    padding: 25px 0;
+    padding: 25px 0 0px;
 }
 
     .narrare-banner img {
         display: block;
-        max-height: 100px;
+        max-height: 250px;
         width: auto;
         margin: 0 auto;
     }
 
-
 /* ========================================
    MENY
    ======================================== */
-
 .narrare-menu {
     background-color: #96F90F;
     padding: 15px 20px;
@@ -78,9 +76,9 @@ body {
         cursor: pointer;
     }
 
-        .menu-container .menu-logout:hover {
-            text-decoration: underline;
-        }
+.menu-container .menu-logout:hover {
+    text-decoration: underline;
+}
 
 
 /* ========================================
@@ -98,14 +96,14 @@ body {
 
 .narrare-footer {
     background-color: #96F90F;
-    padding: 20px 0;
+    padding: 5px 0;
 }
 
     .narrare-footer img {
         display: block;
-        max-height: 50px;
+        max-height: 125px;
         width: auto;
-        margin: 0 auto 10px auto;
+        margin: 0px;
     }
 
     .narrare-footer p {

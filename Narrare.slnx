@@ -4,6 +4,7 @@
     <File Path="Krav_fran_skola.txt" />
     <File Path="Min_grundplan.txt" />
     <File Path="Roadmap.txt" />
+    <File Path="StodordPress.txt" />
     <File Path="VG_Dokumentation.txt" />
   </Folder>
   <Project Path="Narrare.Api/Narrare.Api.csproj" />
