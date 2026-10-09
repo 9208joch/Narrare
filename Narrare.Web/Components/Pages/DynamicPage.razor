@@ -1,0 +1,145 @@
+﻿@page "/pages/{Slug}"
+
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject PagesApiService PagesApiService
+@inject PageContentApiService PageContentApiService
+@inject SiteStyleApiService SiteStyleApiService
+
+
+
+<div class="page-container">
+
+    @if (siteStyle != null)
+    {
+        <style>
+                .dynamic-page-heading {
+                    font-size: @(siteStyle.HeadingFontSize)px;
+                    font-weight: @(siteStyle.HeadingBold ? "bold" : "normal");
+                    color: @siteStyle.HeadingColor;
+                    margin-bottom: @(siteStyle.HeadingMarginBottom)px;
+                }
+
+                .dynamic-page-text {
+                    font-size: @(siteStyle.TextFontSize)px;
+                    color: @siteStyle.TextColor;
+                    line-height: @siteStyle.TextLineHeight;
+                    margin-bottom: @(siteStyle.TextMarginBottom)px;
+                }
+
+                .dynamic-page-image {
+                    max-width: @(siteStyle.ImageMaxWidth)%;
+                    border-radius: @(siteStyle.ImageBorderRadius)px;
+                }
+
+                .dynamic-page-link {
+                    color: @siteStyle.LinkColor;
+                    font-weight: @(siteStyle.LinkBold ? "bold" : "normal");
+                    text-decoration: @(siteStyle.LinkUnderline ? "underline" : "none");
+                }
+        </style>
+    }
+
+    @if (currentPage == null)
+    {
+        <p>Laddar sida...</p>
+    }
+    else
+    {
+        <h1>@currentPage.Title</h1>
+
+        @if (contents == null)
+        {
+            <p>Laddar innehåll...</p>
+        }
+        else if (contents.Count == 0)
+        {
+            <p>@currentPage.Content</p>
+        }
+        else
+        {
+            @foreach (var content in contents)
+            {
+                @switch (content.Type.ToLower())
+                {
+                    case "heading":
+                        <h2>@content.Content</h2>
+                        break;
+
+                    case "text":
+                        <p>@content.Content</p>
+                        break;
+
+                    case "image":
+                        <img src="@content.Content"
+                             alt="@currentPage.Title"
+                             class="page-image" />
+                        break;
+
+                    case "link":
+                        <a href="@content.Content"
+                           target="_blank"
+                           rel="noopener noreferrer">
+                            @content.Content
+                        </a>
+                        break;
+
+                    default:
+                        <p>@content.Content</p>
+                        break;
+                }
+            }
+        }
+
+        <p class="text-muted mt-4">
+            Besökare: @currentPage.VisitCount
+        </p>
+    }
+
+</div>
+
+@code
+{
+    [Parameter]
+    public string Slug { get; set; } = string.Empty;
+
+    private Page? currentPage;
+
+    private List<PageContent>? contents;
+
+    private SiteStyle? siteStyle;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        currentPage = null;
+        contents = null;
+        siteStyle = null;
+        
+        // Hämta sidan
+        currentPage = await PagesApiService.GetBySlugAsync(Slug);
+
+        if (currentPage == null)
+        {
+            return;
+        }
+        
+        // Öka besöksräknaren
+        var success =
+            await PagesApiService.IncrementVisitCountAsync(currentPage.Id);
+
+        if (success)
+        {
+            // Uppdatera värdet som visas utan ett extra API-anrop
+            currentPage.VisitCount++;
+        }
+        
+        // Hämta innehållet till sidan
+        contents =
+            await PageContentApiService.GetByPageIdAsync(currentPage.Id);
+
+        // Hämta webbplatsens styling
+        siteStyle =
+            await SiteStyleApiService.GetAsync();
+    }
+}

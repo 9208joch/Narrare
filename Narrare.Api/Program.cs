@@ -1,4 +1,7 @@
 
+using Narrare.Infrastructure;
+using Narrare.Application;
+
 namespace Narrare.Api
 {
     public class Program
@@ -6,7 +9,9 @@ namespace Narrare.Api
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddApplication();
+            
             // Add services to the container.
 
             builder.Services.AddControllers();

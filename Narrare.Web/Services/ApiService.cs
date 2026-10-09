@@ -1,0 +1,105 @@
+﻿using System.Net.Http.Json;
+
+namespace Narrare.Web.Services;
+
+public class ApiService
+{
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly CurrentUserService _currentUserService;
+
+    public ApiService(
+        IHttpClientFactory httpClientFactory,
+        CurrentUserService currentUserService)
+    {
+        _httpClientFactory = httpClientFactory;
+        _currentUserService = currentUserService;
+    }
+
+    private void AddUserIdHeader(HttpClient client)
+    {
+        client.DefaultRequestHeaders.Remove("X-User-Id");
+
+        if (_currentUserService.CurrentUser != null)
+        {
+            client.DefaultRequestHeaders.Add(
+                "X-User-Id",
+                _currentUserService.CurrentUser.Id.ToString());
+        }
+    }
+
+    public async Task<T?> GetAsync<T>(string url)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        var response = await client.GetAsync(url);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<T>();
+    }
+
+    public async Task<TResponse?> PostAsync<TRequest, TResponse>(
+    string url,
+    TRequest data)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        var response = await client.PostAsJsonAsync(url, data);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TResponse>();
+    }
+
+    public async Task<bool> PostAsync<TRequest>(
+        string url,
+        TRequest data)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        var response = await client.PostAsJsonAsync(url, data);
+
+        return response.IsSuccessStatusCode;
+    }
+
+    public async Task<TResponse?> PutAsync<TRequest, TResponse>(
+        string url,
+        TRequest data)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        var response = await client.PutAsJsonAsync(url, data);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TResponse>();
+    }
+
+    public async Task<bool> DeleteAsync(string url)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        var response = await client.DeleteAsync(url);
+
+        return response.IsSuccessStatusCode;
+    }
+}

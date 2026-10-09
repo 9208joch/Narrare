@@ -1,0 +1,304 @@
+﻿@page "/admin/style"
+
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject SiteStyleApiService SiteStyleApiService
+@inject CurrentUserService CurrentUserService
+
+<h1>Administrera styling</h1>
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        Du måste vara inloggad som administratör.
+    </div>
+}
+else if (CurrentUserService.CurrentUser!.Role !=
+         Narrare.Domain.Enums.UserRole.Admin)
+{
+    <div class="alert alert-danger">
+        Du har inte behörighet att administrera styling.
+    </div>
+}
+else if (siteStyle == null)
+{
+    <p>Laddar...</p>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <h3>Rubrik</h3>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Storlek (px)
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       @bind="siteStyle.HeadingFontSize" />
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input"
+                       type="checkbox"
+                       @bind="siteStyle.HeadingBold" />
+
+                <label class="form-check-label">
+                    Fetstil
+                </label>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Färg
+                </label>
+
+                <input class="form-control"
+                       type="text"
+                       @bind="siteStyle.HeadingColor" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Marginal under (px)
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       @bind="siteStyle.HeadingMarginBottom" />
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <h3>Text</h3>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Storlek (px)
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       @bind="siteStyle.TextFontSize" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Färg
+                </label>
+
+                <input class="form-control"
+                       type="text"
+                       @bind="siteStyle.TextColor" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Radavstånd
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       step="0.1"
+                       @bind="siteStyle.TextLineHeight" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Marginal under (px)
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       @bind="siteStyle.TextMarginBottom" />
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <h3>Bild</h3>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Maxbredd (%)
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       @bind="siteStyle.ImageMaxWidth" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Rundade hörn (px)
+                </label>
+
+                <input class="form-control"
+                       type="number"
+                       @bind="siteStyle.ImageBorderRadius" />
+            </div>
+
+        </div>
+    </div>
+
+
+    <div class="card mb-4">
+        <div class="card-body">
+
+            <h3>Länk</h3>
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Färg
+                </label>
+
+                <input class="form-control"
+                       type="text"
+                       @bind="siteStyle.LinkColor" />
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input"
+                       type="checkbox"
+                       @bind="siteStyle.LinkBold" />
+
+                <label class="form-check-label">
+                    Fetstil
+                </label>
+            </div>
+
+            <div class="form-check mb-3">
+                <input class="form-check-input"
+                       type="checkbox"
+                       @bind="siteStyle.LinkUnderline" />
+
+                <label class="form-check-label">
+                    Understrykning
+                </label>
+            </div>
+
+        </div>
+    </div>
+
+
+    <button class="btn btn-success"
+            @onclick="Save">
+        Spara styling
+    </button>
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-success mt-3">
+            @message
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">
+            @errorMessage
+        </div>
+    }
+}
+
+@code
+{
+    private SiteStyle? siteStyle;
+
+    private string? message;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        siteStyle = await SiteStyleApiService.GetAsync();
+
+        if (siteStyle == null)
+        {
+            siteStyle = new SiteStyle
+            {
+                HeadingFontSize = 32,
+                HeadingBold = true,
+                HeadingColor = "#000000",
+                HeadingMarginBottom = 20,
+
+                TextFontSize = 18,
+                TextColor = "#000000",
+                TextLineHeight = 1.5,
+                TextMarginBottom = 15,
+
+                ImageMaxWidth = 100,
+                ImageBorderRadius = 8,
+
+                LinkColor = "#0000EE",
+                LinkBold = false,
+                LinkUnderline = true
+            };
+        }
+    }
+
+    private async Task Save()
+    {
+        message = null;
+        errorMessage = null;
+
+        if (siteStyle == null)
+        {
+            return;
+        }
+
+        if (siteStyle.Id == 0)
+        {
+            var created =
+                await SiteStyleApiService.CreateAsync(siteStyle);
+
+            if (created == null)
+            {
+                errorMessage =
+                    "Kunde inte skapa stylinginställningarna.";
+                return;
+            }
+
+            siteStyle = created;
+        }
+        else
+        {
+            var updated =
+                await SiteStyleApiService.UpdateAsync(siteStyle);
+
+            if (updated == null)
+            {
+                errorMessage =
+                    "Kunde inte spara stylinginställningarna.";
+                return;
+            }
+
+            siteStyle = updated;
+        }
+
+        message = "Stylinginställningarna har sparats.";
+    }
+}

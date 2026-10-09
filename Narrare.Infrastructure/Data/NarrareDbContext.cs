@@ -1,0 +1,198 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Narrare.Domain.Entities;
+using System;
+using System.Collections.Generic;
+using System.Reflection.Emit;
+using System.Text;
+
+namespace Narrare.Infrastructure.Data;
+
+public class NarrareDbContext : DbContext
+{
+    public NarrareDbContext(DbContextOptions<NarrareDbContext> options)
+        : base(options)
+    {
+    }
+    
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Category> Categories => Set<Category>();
+    public DbSet<Post> Posts => Set<Post>();
+    public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<MenuItem> MenuItems => Set<MenuItem>();
+    public DbSet<Page> Pages => Set<Page>();
+    public DbSet<PageContent> PageContents { get; set; }
+    public DbSet<SiteStyle> SiteStyles { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(user => user.Id);
+
+            entity.Property(user => user.Username)
+                .IsRequired()
+                .HasMaxLength(50);
+
+            entity.Property(user => user.PasswordHash)
+                .IsRequired();
+
+            entity.Property(user => user.Location)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(user => user.Occupation)
+                .HasMaxLength(100);
+
+            entity.Property(user => user.ProfileImageUrl)
+                .HasMaxLength(500);
+
+            entity.HasIndex(user => user.Username)
+                .IsUnique();
+        });
+
+        modelBuilder.Entity<Category>(entity =>
+        {
+            entity.HasKey(category => category.Id);
+
+            entity.Property(category => category.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(category => category.Description)
+                .HasMaxLength(500);
+
+            entity.HasData(
+                new Category
+                {
+                    Id = 3,
+                    Name = "Kök",
+                    Description = "Diskussioner om kök, matlagning och köksinredning."
+                },
+                new Category
+                {
+                    Id = 4,
+                    Name = "Sovrum",
+                    Description = "Diskussioner om sovrum, sängar och förvaring."
+                },
+                new Category
+                {
+                    Id = 5,
+                    Name = "Badrum",
+                    Description = "Diskussioner om badrum, renovering och inredning."
+                },
+                new Category
+                {
+                    Id = 6,
+                    Name = "Trädgård",
+                    Description = "Diskussioner om trädgård, uteplatser och växter."
+                }
+            );
+        });
+        modelBuilder.Entity<MenuItem>(entity =>
+        {
+            entity.HasKey(menuItem => menuItem.Id);
+
+            entity.Property(menuItem => menuItem.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(menuItem => menuItem.Url)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(menuItem => menuItem.SortOrder)
+                .IsRequired();
+
+            entity.HasData(
+                new MenuItem
+                {
+                    Id = 1,
+                    Name = "Hem",
+                    Url = "/",
+                    SortOrder = 1
+                },
+                new MenuItem
+                {
+                    Id = 2,
+                    Name = "Kategorier",
+                    Url = "/categories",
+                    SortOrder = 2
+                },
+                new MenuItem
+                {
+                    Id = 3,
+                    Name = "Om Narrare",
+                    Url = "/pages/about",
+                    SortOrder = 3
+                },
+                new MenuItem
+                {
+                    Id = 4,
+                    Name = "Logga in",
+                    Url = "/login",
+                    SortOrder = 4
+                }
+            );
+        });
+
+        modelBuilder.Entity<Post>(entity =>
+        {
+            entity.HasKey(post => post.Id);
+
+            entity.Property(post => post.Title)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(post => post.Content)
+                .IsRequired();
+
+            entity.HasOne(post => post.User)
+                .WithMany(user => user.Posts)
+                .HasForeignKey(post => post.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(post => post.Category)
+                .WithMany(category => category.Posts)
+                .HasForeignKey(post => post.CategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.HasKey(comment => comment.Id);
+
+            entity.Property(comment => comment.Content)
+                .IsRequired();
+
+            entity.HasOne(comment => comment.User)
+                .WithMany()
+                .HasForeignKey(comment => comment.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(comment => comment.Post)
+                .WithMany(post => post.Comments)
+                .HasForeignKey(comment => comment.PostId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        modelBuilder.Entity<Page>(entity =>
+        {
+            entity.HasKey(page => page.Id);
+
+            entity.Property(page => page.Title)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(page => page.Slug)
+                .IsRequired()
+                .HasMaxLength(200);
+
+            entity.Property(page => page.Content)
+                .IsRequired();
+
+            entity.HasIndex(page => page.Slug)
+                .IsUnique();
+        });
+    }
+} 

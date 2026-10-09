@@ -1,0 +1,102 @@
+﻿@page "/admin"
+
+@using Narrare.Web.Services
+
+@inject CurrentUserService CurrentUserService
+
+<h1>Administration</h1>
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        Du måste vara inloggad som administratör.
+    </div>
+}
+else if (CurrentUserService.CurrentUser!.Role !=
+         Narrare.Domain.Enums.UserRole.Admin)
+{
+    <div class="alert alert-danger">
+        Du har inte behörighet att administrera webbplatsen.
+    </div>
+}
+else
+{
+    <div class="row g-4">
+
+        <!-- Meny -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3>Hantera meny</h3>
+
+                    <p>
+                        Skapa, ta bort och ändra ordningen
+                        på menyalternativ.
+                    </p>
+
+                    <a class="btn btn-primary"
+                       href="/admin/menu">
+                        Hantera meny
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidor -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3>Hantera sidor</h3>
+
+                    <p>
+                        Skapa och hantera webbplatsens sidor.
+                    </p>
+
+                    <a class="btn btn-primary"
+                       href="/admin/pages">
+                        Hantera sidor
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidinnehåll -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3>Hantera sidinnehåll</h3>
+
+                    <p>
+                        Lägg till, redigera och ta bort
+                        innehåll på sidor.
+                    </p>
+
+                    <a class="btn btn-primary"
+                       href="/admin/page-content">
+                        Hantera sidinnehåll
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Styling -->
+        <div class="col-md-4">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h3>Hantera styling</h3>
+
+                    <p>
+                        Bestäm hur rubriker, text, bilder
+                        och länkar ska se ut.
+                    </p>
+
+                    <a class="btn btn-primary"
+                       href="/admin/style">
+                        Hantera styling
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+}

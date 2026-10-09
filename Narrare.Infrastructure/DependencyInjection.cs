@@ -1,0 +1,38 @@
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Narrare.Application.Interfaces.Repositories;
+using Narrare.Infrastructure.Data;
+using Narrare.Infrastructure.Repositories;
+using System;
+using System.Collections.Generic;
+using System.Text;
+
+
+namespace Narrare.Infrastructure;
+
+public static class DependencyInjection
+{
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddDbContext<NarrareDbContext>(options =>
+            options.UseSqlServer(
+                configuration.GetConnectionString("NarrareDb")));
+        services.AddScoped(typeof(IRepository<>), 
+            typeof(Repository<>));
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<ICategoryRepository, CategoryRepository>();
+        services.AddScoped<IPostRepository, PostRepository>();
+        services.AddScoped<ICommentRepository, CommentRepository>();
+        services.AddScoped<IMenuItemRepository, MenuItemRepository>();
+        services.AddScoped<IPageRepository, PageRepository>();
+        services.AddScoped<IPageContentRepository, PageContentRepository>();
+        services.AddScoped<ISiteStyleRepository, SiteStyleRepository>();
+
+
+        return services;
+    }
+}

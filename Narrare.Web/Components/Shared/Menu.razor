@@ -1,0 +1,140 @@
+﻿@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject MenuItemsApiService MenuItemsApiService
+@inject CurrentUserService CurrentUserService
+@inject NavigationManager NavigationManager
+
+@implements IDisposable
+
+<div class="menu-container">
+
+    @if (menuItems == null)
+    {
+        <span>Laddar meny...</span>
+    }
+    else
+    {
+        <!-- Meny för dator -->
+        <div class="desktop-menu">
+            @foreach (var menuItem in menuItems)
+            {
+                if (CurrentUserService.IsLoggedIn &&
+                    menuItem.Url == "/login")
+                {
+                    continue;
+                }
+
+                <a href="@menuItem.Url">@menuItem.Name</a>
+            }
+
+            @if (IsAdmin)
+            {
+                <a class="menu-admin" href="/admin">
+                    Administration
+                </a>
+            }
+
+            @if (CurrentUserService.IsLoggedIn)
+            {
+                <button class="menu-logout" @onclick="Logout">
+                    Logga ut
+                </button>
+            }
+        </div>
+
+        <!-- Meny för mobil -->
+        <div class="mobile-menu">
+
+            <div class="mobile-menu-top">
+                <button class="hamburger-button"
+                        aria-label="Öppna eller stäng menyn"
+                        aria-expanded="@mobileMenuOpen"
+                        @onclick="ToggleMobileMenu">
+                    @(mobileMenuOpen ? "✕" : "☰") Meny
+                </button>
+
+                @if (CurrentUserService.IsLoggedIn)
+                {
+                    <button class="menu-logout" @onclick="Logout">
+                        Logga ut
+                    </button>
+                }
+                else
+                {
+                    <a href="/login">Logga in</a>
+                }
+            </div>
+
+            @if (mobileMenuOpen)
+            {
+                <div class="mobile-menu-links">
+                    @foreach (var menuItem in menuItems)
+                    {
+                        if (menuItem.Url == "/login")
+                        {
+                            continue;
+                        }
+
+                        <a href="@menuItem.Url"
+                           @onclick="CloseMobileMenu">
+                            @menuItem.Name
+                        </a>
+                    }
+
+                    @if (IsAdmin)
+                    {
+                        <a href="/admin"
+                           @onclick="CloseMobileMenu">
+                            Administration
+                        </a>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<MenuItemDto>? menuItems;
+    private bool mobileMenuOpen = false;
+
+    private bool IsAdmin =>
+        CurrentUserService.IsLoggedIn &&
+        CurrentUserService.CurrentUser?.Role ==
+            Narrare.Domain.Enums.UserRole.Admin;
+
+    protected override async Task OnInitializedAsync()
+    {
+        CurrentUserService.OnChange += OnCurrentUserChanged;
+
+        menuItems = await MenuItemsApiService.GetAllAsync();
+    }
+
+    private void ToggleMobileMenu()
+    {
+        mobileMenuOpen = !mobileMenuOpen;
+    }
+
+    private void CloseMobileMenu()
+    {
+        mobileMenuOpen = false;
+    }
+
+    private void Logout()
+    {
+        mobileMenuOpen = false;
+        CurrentUserService.Logout();
+        NavigationManager.NavigateTo("/");
+    }
+
+    private void OnCurrentUserChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        CurrentUserService.OnChange -= OnCurrentUserChanged;
+    }
+}

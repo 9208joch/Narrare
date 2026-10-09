@@ -1,0 +1,382 @@
+﻿@page "/admin/page-content"
+
+@using Narrare.Domain.Entities
+@using Narrare.Web.Services
+
+@inject PagesApiService PagesApiService
+@inject PageContentApiService PageContentApiService
+@inject CurrentUserService CurrentUserService
+
+<h1>Administrera sidinnehåll</h1>
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        Du måste vara inloggad som administratör.
+    </div>
+}
+else if (CurrentUserService.CurrentUser!.Role != Narrare.Domain.Enums.UserRole.Admin)
+{
+    <div class="alert alert-danger">
+        Du har inte behörighet att administrera sidinnehåll.
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3>Välj sida</h3>
+
+            <select class="form-select"
+                    @bind="selectedPageId"
+                    @bind:after="LoadPageContent">
+
+                <option value="0">
+                    -- Välj sida --
+                </option>
+
+                @if (pages != null)
+                {
+                    @foreach (var currentPage in pages)
+                    {
+                        <option value="@currentPage.Id">
+                            @currentPage.Title
+                        </option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    @if (selectedPageId > 0)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>
+                    @(editingContent == null
+                        ? "Lägg till innehåll"
+                        : "Redigera innehåll")
+                </h3>
+
+                <div class="mb-3">
+                    <label class="form-label">Typ</label>
+
+                    <select class="form-select"
+                            @bind="newContent.Type">
+
+                        <option value="text">Text</option>
+                        <option value="heading">Rubrik</option>
+                        <option value="image">Bild</option>
+                        <option value="link">Länk</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Innehåll</label>
+
+                    <textarea class="form-control"
+                              rows="5"
+                              @bind="newContent.Content">
+                    </textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ordning</label>
+
+                    <input class="form-control"
+                           type="number"
+                           @bind="newContent.Order" />
+                </div>
+
+                @if (editingContent == null)
+                {
+                    <button class="btn btn-primary"
+                            @onclick="CreateContent">
+                        Lägg till innehåll
+                    </button>
+                }
+                else
+                {
+                    <button class="btn btn-success me-2"
+                            @onclick="UpdateContent">
+                        Spara ändringar
+                    </button>
+
+                    <button class="btn btn-secondary"
+                            @onclick="CancelEdit">
+                        Avbryt
+                    </button>
+                }
+
+                @if (!string.IsNullOrWhiteSpace(errorMessage))
+                {
+                    <div class="alert alert-danger mt-3">
+                        @errorMessage
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-body">
+                <h3>Befintligt innehåll</h3>
+
+                @if (contents == null)
+                {
+                    <p>Laddar...</p>
+                }
+                else if (contents.Count == 0)
+                {
+                    <p>Det finns inget innehåll på denna sida ännu.</p>
+                }
+                else
+                {
+                    @foreach (var content in contents)
+                    {
+                        <div class="border rounded p-3 mb-3">
+
+                            <strong>
+                                Typ: @content.Type
+                            </strong>
+
+                            <br />
+
+                            <small class="text-muted">
+                                Ordning: @content.Order
+                            </small>
+
+                            <p class="mt-2">
+                                @content.Content
+                            </p>
+
+                            <button class="btn btn-outline-primary btn-sm me-2"
+                                    @onclick="() => EditContent(content)">
+                                Redigera
+                            </button>
+
+                            <button class="btn btn-outline-danger btn-sm"
+                                    @onclick="() => DeleteContent(content.Id)">
+                                Radera
+                            </button>
+
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+}
+
+@code
+{
+    private List<Page>? pages;
+
+    private List<PageContent>? contents;
+
+    private PageContent newContent = new();
+
+    private PageContent? editingContent;
+
+    private int selectedPageId;
+
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        if (CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        pages = await PagesApiService.GetAllAsync();
+    }
+
+    private async Task LoadPageContent()
+    {
+        errorMessage = null;
+        contents = null;
+        editingContent = null;
+
+        if (selectedPageId <= 0)
+        {
+            return;
+        }
+
+        contents =
+            await PageContentApiService.GetByPageIdAsync(
+                selectedPageId);
+
+        contents ??= new List<PageContent>();
+
+        contents = contents
+            .OrderBy(x => x.Order)
+            .ToList();
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents.Count + 1
+        };
+    }
+
+    private async Task CreateContent()
+    {
+        errorMessage = null;
+
+        if (selectedPageId <= 0)
+        {
+            errorMessage = "Välj en sida först.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newContent.Content))
+        {
+            errorMessage = "Innehåll måste anges.";
+            return;
+        }
+
+        newContent.PageId = selectedPageId;
+
+        var result =
+            await PageContentApiService.CreateAsync(newContent);
+
+        if (result == null)
+        {
+            errorMessage = "Kunde inte skapa innehållet.";
+            return;
+        }
+
+        contents ??= new List<PageContent>();
+
+        contents.Add(result);
+
+        contents = contents
+            .OrderBy(x => x.Order)
+            .ToList();
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents.Count + 1
+        };
+    }
+
+    private void EditContent(PageContent content)
+    {
+        editingContent = content;
+
+        newContent = new PageContent
+        {
+            Id = content.Id,
+            PageId = content.PageId,
+            Type = content.Type,
+            Content = content.Content,
+            Order = content.Order
+        };
+
+        errorMessage = null;
+    }
+
+    private async Task UpdateContent()
+    {
+        errorMessage = null;
+
+        if (editingContent == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(newContent.Content))
+        {
+            errorMessage = "Innehåll måste anges.";
+            return;
+        }
+
+        var result =
+            await PageContentApiService.UpdateAsync(
+                editingContent.Id,
+                newContent);
+
+        if (result == null)
+        {
+            errorMessage = "Kunde inte uppdatera innehållet.";
+            return;
+        }
+
+        if (contents != null)
+        {
+            var index = contents.FindIndex(
+                x => x.Id == editingContent.Id);
+
+            if (index >= 0)
+            {
+                contents[index] = result;
+
+                contents = contents
+                    .OrderBy(x => x.Order)
+                    .ToList();
+            }
+        }
+
+        editingContent = null;
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents?.Count + 1 ?? 1
+        };
+    }
+
+    private void CancelEdit()
+    {
+        editingContent = null;
+
+        newContent = new PageContent
+        {
+            PageId = selectedPageId,
+            Type = "text",
+            Order = contents?.Count + 1 ?? 1
+        };
+
+        errorMessage = null;
+    }
+
+    private async Task DeleteContent(int id)
+    {
+        errorMessage = null;
+
+        var success =
+            await PageContentApiService.DeleteAsync(id);
+
+        if (!success)
+        {
+            errorMessage = "Kunde inte radera innehållet.";
+            return;
+        }
+
+        if (contents != null)
+        {
+            var content =
+                contents.FirstOrDefault(x => x.Id == id);
+
+            if (content != null)
+            {
+                contents.Remove(content);
+            }
+        }
+
+        if (editingContent?.Id == id)
+        {
+            CancelEdit();
+        }
+    }
+}
