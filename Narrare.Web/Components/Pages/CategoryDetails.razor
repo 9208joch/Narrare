@@ -64,8 +64,8 @@
                 </div>
             </div>
         }
-
-        <h2>Inlägg</h2>
+        
+        
 
         @if (posts == null)
         {
@@ -137,7 +137,7 @@
                             }
                         }
 
-                        <hr />
+                        
 
                        <h5>Kommentarer</h5>
 
@@ -155,7 +155,7 @@ else
 {
     @foreach (var comment in postComments)
     {
-        <div class="border rounded p-2 mb-2">
+                                <div class="border border-4 rounded p-2 mb-2">
 
             @if (CurrentUserService.IsLoggedIn &&
                  editingComments.ContainsKey(comment.Id) &&
@@ -208,6 +208,7 @@ else
         </div>
     }
 } 
+<hr />
                         
                         
                         @if (CurrentUserService.IsLoggedIn)
@@ -534,6 +535,7 @@ else
         {
             return;
         }
+        
         
         if (post.UserId != CurrentUserService.CurrentUser!.Id &&
             CurrentUserService.CurrentUser.Role != Narrare.Domain.Enums.UserRole.Admin)
