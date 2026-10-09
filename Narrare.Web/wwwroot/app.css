@@ -40,45 +40,104 @@ body {
         margin: 0 auto;
     }
 
+
 /* ========================================
    MENY
    ======================================== */
+
 .narrare-menu {
     background-color: #96F90F;
     padding: 15px 20px;
 }
 
 .menu-container {
+    width: 100%;
+}
+
+.desktop-menu {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 30px;
 }
 
-    .menu-container a {
-        color: black;
-        text-decoration: none;
-        font-weight: bold;
+.menu-container a {
+    color: black;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+    .menu-container a:hover {
+        text-decoration: underline;
     }
 
-        .menu-container a:hover {
-            text-decoration: underline;
-        }
+.menu-container .menu-logout {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+    color: black;
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+}
 
-    .menu-container .menu-logout {
+    .menu-container .menu-logout:hover {
+        text-decoration: underline;
+    }
+
+/* Mobilmenyn är dold på dator */
+.mobile-menu {
+    display: none;
+}
+
+/* ========================================
+   MOBILANPASSNING
+   ======================================== */
+
+@media (max-width: 768px) {
+
+    .narrare-menu {
+        padding: 10px 20px;
+    }
+
+    .desktop-menu {
+        display: none;
+    }
+
+    .mobile-menu {
+        display: block;
+    }
+
+    .mobile-menu-top {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 30px;
+    }
+
+    .hamburger-button {
         background: none;
         border: none;
-        padding: 0;
-        margin: 0;
         color: black;
-        font: inherit;
+        font-size: 18px;
         font-weight: bold;
         cursor: pointer;
+        padding: 5px 0;
     }
 
-.menu-container .menu-logout:hover {
-    text-decoration: underline;
+    .mobile-menu-links {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        padding: 20px 0 10px;
+    }
+
+        .mobile-menu-links a {
+            display: block;
+        }
 }
+
 
 
 /* ========================================
@@ -162,3 +221,10 @@ body {
     .category-card p {
         margin-bottom: 0;
     }
+@media (max-width: 768px) {
+    .narrare-banner img {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+}
