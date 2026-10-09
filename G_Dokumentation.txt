@@ -1,21 +1,21 @@
-Först bör nämnas att viss förberedelse inför vg är gort under g delen för att förenkla mitt arbete.
-Myckat av arbetet(det mästa) är gjort innan vi faktist gått igenom det i klassrum, så det kommer finnas alternativa sett att lösa plroblem men likt fungerande endå.
-
-
-skrivigt innan frontend i g,undrar om jag inte har gett mig in lute djupt
-grön justerad till #96F90F
-
-
-<autoriserad> ?? kolla över
-slugg se över presentation 
+namn på forum: Narrare
+tema på forumet: hus och hem
+Narrare är lation före "att berätta" eller "att berätta en historia"
 
 
 
+Förberedelser inför VG
 
-Innehåll på Pages
-Bilder och länkar
-Enkel CSS-administration
-Besöksräknare
-Responsivitet
-komm ihår admin knapp
-fixa markerad text vid start
+Vissa förberedelser inför VG-delen har genomförts redan under G-arbetet. Syftet har varit att förenkla det fortsatta arbetet och skapa en grund som kan byggas vidare på.
+
+Arbetsprocess och inlärning
+
+En stor del av projektet utvecklades innan motsvarande moment hade gåtts igenom i klassrummet. Det innebär att vissa lösningar kan skilja sig från de metoder som senare presenteras under utbildningen. Det kan finnas alternativa sätt att lösa samma problem, utan att den befintliga lösningen för den skull är felaktig.
+
+Projektet har därför även inneburit ett eget utforskande av tekniker, arkitektur och problemlösning.
+
+Grafisk profil
+
+Den gröna färgen i projektets har justerats till färgkoden #96F90F för att stämma bettre med bild.
+
+jag har valt att köra på Blazor då jag är oerfaren i detta

@@ -78,16 +78,9 @@ VG/ riktigt forum
 
 Svar på kommentarer
 Bilder/bilagor
-Grupper
-Gruppägare/moderator
-Gruppmedlemmar
-Profil-sidor
 Profilrapportering
-Admin kan redigera profil
 Svordomsfilter
 Spara inlägg
-Förbättrad sökning
-
 Noggrann kontroll av befintliga funktioner
 åtgärda eventuella problem
 "sprint revue" (med mig, mig själv och jag)
@@ -98,6 +91,12 @@ Minimum klart
 Förberedelse av presentation
 
 VG++/ Säkerhet
+Grupper
+Gruppägare/moderator
+Gruppmedlemmar
+Profil-sidor
+Admin kan redigera profil
+Förbättrad sökning
 
 idéer att se över senare
 

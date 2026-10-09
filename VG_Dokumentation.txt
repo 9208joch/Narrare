@@ -6,6 +6,10 @@ master admin? kattegorier roller 2a hand kontroll?
 se över sidoformatering och namn
 seeda antal besökare
 sortera inlägg
+besökare räknare på kattegorier
+admin: söka på användare (flyttat från G)
+admin: Blockera/ avblockera användare (flyttat från G)
+admin: Skicka varning till användare samt se antal varningar(flyttat från G)
 
 
 

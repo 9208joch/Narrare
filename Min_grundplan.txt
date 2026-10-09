@@ -33,9 +33,9 @@ skall fylla med inlägg (AI)
 
 G
 Admin:
-söka på användare
-Blockera/ avblockera användare
-Skicka varning till användare samt se antal varningar och kommentarer
+söka på användare (flyttat till vg)
+Blockera/ avblockera användare (flyttat till vg)
+Skicka varning till användare samt se antal varningar och kommentarer (flyttat till vg)
 ta bort, lägga till och edditera kattegorier
 edditera och ta bort inlägg
 
@@ -63,11 +63,11 @@ i kommentarerna sortering möjligheter mellan senast, äldst och flest blommor
 Vg
 kommentera på kommentar inte bara på inlägg
 lägga kommentera med bil funktion
+automatisk svor och skäls ord hantering, ersätta ord med ******* (skit, dynga och liknande är inte förbjudna men helvete eller fitta och likande är) hur löser man detta bäst?
+
+
+VG++
 skapa separata grupper med endast inbjudna medlemmar med semiadmin (grundaren) som kan ta bort inlägg, kommentarer och medlemmar + admin samma möjlighet som innan
 användare skall kunna ha egen info sida (åtkomst genom att klicka på användare i ett inlägg eller söka) + anmäl funktion. admin skall kunna edditera detta
-automatisk svor och skäls ord hantering, ersätta ord med ******* (skit, dynga och liknande är inte förbjudna men helvete eller fitta och likande är)
-mer idéer?
-
- VG+++
 Fördjupning säkerhet
 detta skall ses över hur bäst
