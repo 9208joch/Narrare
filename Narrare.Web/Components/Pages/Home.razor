@@ -1,11 +1,12 @@
 ﻿@page "/"
+@using Narrare.Web.Services
+@inject GalleryApiService GalleryApiService
 
 <PageTitle>Narrare</PageTitle>
 
 <div class="home-container">
-
     <h1>Välkommen till Narrare</h1>
-
+    
     <p>
         Ett forum för hus och hem.
     </p>
@@ -15,4 +16,65 @@
         dela erfarenheter och få hjälp av andra.
     </p>
 
+    <div class="gallery-container">
+        <h2>Bildgalleri</h2>
+
+        @if (galleryImages == null)
+        {
+            <p>Laddar bilder...</p>
+        }
+        else if (galleryImages.Count == 0)
+        {
+            <p>Det finns inga bilder i galleriet ännu.</p>
+        }
+        else
+        {
+            <div class="gallery-grid">
+                @foreach (var image in galleryImages)
+                {
+                    <div class="gallery-item" @key="image.Id">
+                        <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                             alt="Bild från Narrares galleri"
+                             @onclick="() => OpenImage(image.ImageId)"
+                             style="cursor: pointer;" />
+                    </div>
+                    @if (selectedImageId.HasValue)
+                    {
+                        <div class="image-modal" @onclick="CloseImage">
+                            <button class="image-modal-close"
+                                    @onclick="CloseImage"
+                                    @onclick:stopPropagation="true"
+                                    aria-label="Stäng bild">
+                                &times;
+                            </button>
+
+                            <img src="@($"https://localhost:7206/api/Images/{selectedImageId.Value}")"
+                                 alt="Förstorad bild"
+                                 @onclick:stopPropagation="true" />
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
 </div>
+
+@code {
+    private List<GalleryImageDto>? galleryImages;
+
+    protected override async Task OnInitializedAsync()
+    {
+        galleryImages = await GalleryApiService.GetImagesAsync();
+    }
+    private int? selectedImageId;
+
+    private void OpenImage(int imageId)
+    {
+        selectedImageId = imageId;
+    }
+
+    private void CloseImage()
+    {
+        selectedImageId = null;
+    }
+}

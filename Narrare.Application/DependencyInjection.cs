@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IPageService, PageService>();
         services.AddScoped<IPageContentService, PageContentService>();
         services.AddScoped<ISiteStyleService, SiteStyleService>();
+        services.AddScoped<IImageService, ImageService>();
 
         return services;
     }

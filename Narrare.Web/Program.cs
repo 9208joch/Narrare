@@ -26,9 +26,20 @@ namespace Narrare.Web
             builder.Services.AddScoped<CategoriesApiService>();
             builder.Services.AddScoped<PageContentApiService>();
             builder.Services.AddScoped<SiteStyleApiService>();
-
+            builder.Services.AddScoped<PostImagesApiService>();
+            builder.Services.AddScoped<CommentImagesApiService>();
             
 
+            builder.Services.AddScoped<GalleryApiService>(serviceProvider =>
+            {
+                var httpClientFactory = serviceProvider
+                    .GetRequiredService<IHttpClientFactory>();
+
+                var httpClient = httpClientFactory
+                    .CreateClient("NarrareApi");
+
+                return new GalleryApiService(httpClient);
+            });
 
             builder.Services.AddHttpClient("NarrareApi", client =>
             {
@@ -43,7 +54,7 @@ namespace Narrare.Web
                 .AddInteractiveServerComponents();
 
             var app = builder.Build();
-
+            
             // Configure the HTTP request pipeline.
             if (!app.Environment.IsDevelopment())
             {

@@ -3,11 +3,15 @@
 @using Narrare.Application.DTOs
 @using Narrare.Domain.Entities
 @using Narrare.Web.Services
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject CategoriesApiService CategoriesApiService
 @inject PostsApiService PostsApiService
 @inject CurrentUserService CurrentUserService
 @inject CommentsApiService CommentsApiService
+@inject ApiService ApiService
+@inject PostImagesApiService PostImagesApiService
+
 
 
 
@@ -55,6 +59,27 @@
                                   @bind="newPost.Content">
                         </textarea>
                     </div>
+                    <!-- Bifoga bild -->
+                    <div class="mb-3">
+                        <label class="form-label">
+                            Bifoga bild
+                        </label>
+
+                        <InputFile OnChange="HandlePostImageSelected"
+                                   accept="image/jpeg,image/png,image/webp"
+                                   class="form-control" />
+
+                        @if (selectedPostImage != null)
+                        {
+                            <p class="mt-2 mb-0">
+                                Vald bild: @selectedPostImage.Name
+                            </p>
+                        }
+
+                        <small class="text-muted">
+                            JPG, PNG eller WebP. Max 20 MB.
+                        </small>
+                    </div>
 
                     <button class="btn btn-primary"
                             @onclick="CreatePost">
@@ -87,6 +112,7 @@
     editingPosts.ContainsKey(post.Id) &&
     editingPosts[post.Id])
                         {
+                            
                             <input class="form-control mb-2"
                                    @bind="editedPostTitles[post.Id]" />
 
@@ -113,7 +139,19 @@
                             <p>
                                 @post.Content
                             </p>
-
+                            @if (postImages.TryGetValue(post.Id, out var images)
+                              && images.Count > 0)
+                            {
+                                <div class="d-flex flex-wrap gap-3 mt-3 mb-3">
+                                    @foreach (var image in images.OrderBy(image => image.SortOrder))
+                                    {
+                                        <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                                             alt="Bild till inlägget"
+                                             class="img-fluid rounded"
+                                             style="max-width: 250px; max-height: 250px; object-fit: contain;" />
+                                    }
+                                </div>
+                            }
                             <small>
                                 Skapad: @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </small>
@@ -246,6 +284,8 @@ else
 
     private List<PostDto>? posts;
 
+    private Dictionary<int, List<PostImageDto>> postImages = new();
+
     private Post newPost = new();
 
     private Dictionary<int, List<CommentDto>> comments = new();
@@ -262,6 +302,13 @@ else
 
     private Dictionary<int, string> editedCommentContents = new();
 
+    private IBrowserFile? selectedPostImage;
+
+    private void HandlePostImageSelected(InputFileChangeEventArgs e)
+    {
+        selectedPostImage = e.File;
+    }
+    
     protected override async Task OnInitializedAsync()
     {
         category = await CategoriesApiService.GetByIdAsync(Id);
@@ -269,7 +316,14 @@ else
         if (category != null)
         {
             posts = await PostsApiService.GetByCategoryAsync(Id);
+            foreach (var post in posts)
+            {
+                var images =
+                    await PostImagesApiService.GetByPostAsync(post.Id);
 
+                postImages[post.Id] =
+                    images ?? new List<PostImageDto>();
+            }
             foreach (var post in posts)
             {
                 if (!newCommentContent.ContainsKey(post.Id))
@@ -306,46 +360,98 @@ else
     }
     
     private async Task CreatePost()
+{
+    if (!CurrentUserService.IsLoggedIn)
     {
-        if (!CurrentUserService.IsLoggedIn)
-        {
-            return;
-        }
+        return;
+    }
 
-        if (string.IsNullOrWhiteSpace(newPost.Title))
-        {
-            return;
-        }
+    if (string.IsNullOrWhiteSpace(newPost.Title))
+    {
+        return;
+    }
 
-        if (string.IsNullOrWhiteSpace(newPost.Content))
-        {
-            return;
-        }
+    if (string.IsNullOrWhiteSpace(newPost.Content))
+    {
+        return;
+    }
 
-        newPost.UserId = CurrentUserService.CurrentUser!.Id;
+    // Ange användaren och kategorin.
+    newPost.UserId = CurrentUserService.CurrentUser!.Id;
+    newPost.CategoryId = Id;
 
-        newPost.CategoryId = Id;
+    // Skapa inlägget först.
+    var createdPost =
+        await PostsApiService.CreateAsync(newPost);
 
-        var createdPost =
-            await PostsApiService.CreateAsync(newPost);
+    if (createdPost == null)
+    {
+        return;
+    }
 
-        if (createdPost == null)
-        {
-            return;
-        }
+    // Ladda upp bilden om användaren har valt en.
+        // if (selectedPostImage != null) att fixa för testning
+    // {
+            if (selectedPostImage != null)
+            {
+                Console.WriteLine(
+                    $"TEST: Bild vald: {selectedPostImage.Name}");
 
+                Console.WriteLine("TEST: Försöker ladda upp bilden.");
+        var uploadedImage = await ApiService.UploadAsync<UploadedImageDto>(
+            "api/Images/upload",
+            selectedPostImage);
+            
+        // Koppla den uppladdade bilden till inlägget.
+            // if (uploadedImage != null) att fixa för testning
+        // {
+        //     await ApiService.PostAsync(
+        //         $"api/Images/posts/{createdPost.Id}/images/{uploadedImage.Id}",
+        //         new { });
+        // }
+        if (uploadedImage != null)
+{
+    var linked = await ApiService.PostAsync(
+        $"api/Images/posts/{createdPost.Id}/images/{uploadedImage.Id}",
+        new { });
+
+    if (!linked)
+    {
+        throw new HttpRequestException(
+            $"Bilden laddades upp, men kunde inte kopplas till inlägget. " +
+            $"PostId: {createdPost.Id}, ImageId: {uploadedImage.Id}");
+    }
+}
+else
+{
+    throw new HttpRequestException(
+        "API:t returnerade inget bildobjekt efter uppladdningen.");
+}
+    }
+        
+
+        // Lägg till det nya inlägget på sidan.
         posts ??= new List<PostDto>();
-
         posts.Insert(0, createdPost);
 
-        newCommentContent[createdPost.Id] = "";
-        comments[createdPost.Id] = new List<CommentDto>();
-        editingPosts[createdPost.Id] = false;
-        editedPostTitles[createdPost.Id] = createdPost.Title;
-        editedPostContents[createdPost.Id] = createdPost.Content;
+        // Hämta bilderna för det nya inlägget direkt.
+        var images = await PostImagesApiService.GetByPostAsync(createdPost.Id);
 
-        newPost = new Post();
-    }
+        postImages[createdPost.Id] =
+            images ?? new List<PostImageDto>();
+
+    // Förbered kommentarsfunktionerna.
+    newCommentContent[createdPost.Id] = "";
+    comments[createdPost.Id] = new List<CommentDto>();
+    editingPosts[createdPost.Id] = false;
+    editedPostTitles[createdPost.Id] = createdPost.Title;
+    editedPostContents[createdPost.Id] = createdPost.Content;
+
+    // Återställ formuläret.
+    selectedPostImage = null;
+
+    newPost = new Post();
+}
     
     private async Task CreateComment(int postId)
     {

@@ -3,11 +3,16 @@
 @using Narrare.Application.DTOs
 @using Narrare.Domain.Entities
 @using Narrare.Web.Services
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject PostsApiService PostsApiService
 @inject CommentsApiService CommentsApiService
 @inject CurrentUserService CurrentUserService
 @inject NavigationManager NavigationManager
+@inject PostImagesApiService PostImagesApiService
+@inject CommentImagesApiService CommentImagesApiService
+@inject ApiService ApiService
+
 <h1 class="mb-4">Narrare</h1>
 @if (CurrentUserService.IsLoggedIn)
 {
@@ -37,13 +42,33 @@ else
                 <input class="form-control"
                        @bind="newPost.Title" />
             </div>
-
+            
             <div class="mb-3">
                 <label class="form-label">Innehåll</label>
 
                 <textarea class="form-control"
                           rows="4"
                           @bind="newPost.Content"></textarea>
+            </div>
+
+            <!-- Bifoga bild -->
+            <div class="mb-3">
+                <label class="form-label">Bifoga bild</label>
+
+                <InputFile OnChange="HandlePostImageSelected"
+                           accept="image/jpeg,image/png,image/webp"
+                           class="form-control" />
+
+                @if (selectedPostImage != null)
+                {
+                    <p class="mt-2 mb-0">
+                        Vald bild: @selectedPostImage.Name
+                    </p>
+                }
+
+                <small class="text-muted">
+                    JPG, PNG eller WebP. Max 20 MB.
+                </small>
             </div>
 
             <button class="btn btn-primary"
@@ -120,13 +145,28 @@ else
         @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
     </p>
 
-    <p class="card-text">
-        @post.Content
-    </p>
+                        <p class="card-text">
+                            @post.Content
+                        </p>
+
+                        @* Visa bilder som hör till inlägget *@
+                        @if (postImages.TryGetValue(post.Id, out var images)
+                            && images.Count > 0)
+                        {
+                            <div class="d-flex flex-wrap gap-3 mt-3 mb-3">
+                                @foreach (var image in images.OrderBy(image => image.SortOrder))
+                                {
+                                    <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                                         alt="Bild till inlägget"
+                                         class="img-fluid rounded"
+                                         style="max-width: 250px; max-height: 250px; object-fit: contain;" />
+                                }
+                            </div>
+                        }
 
                         @if (CurrentUserService.IsLoggedIn &&
-                        (post.UserId == CurrentUserService.CurrentUser!.Id ||
-                         CurrentUserService.CurrentUser.Role == Narrare.Domain.Enums.UserRole.Admin))
+                            (post.UserId == CurrentUserService.CurrentUser!.Id ||
+                             CurrentUserService.CurrentUser.Role == Narrare.Domain.Enums.UserRole.Admin))
                         {
                             <button class="btn btn-outline-secondary btn-sm me-2"
                                     @onclick="() => EditPost(post)">
@@ -211,12 +251,27 @@ else
 else
 {
     <p class="mb-1">
-        @comment.Content
-    </p>
+    @comment.Content
+</p>
 
-    <small class="text-muted">
-        @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-    </small>
+@* Visa bilder som hör till kommentaren *@
+@if (commentImages.TryGetValue(comment.Id, out var images)
+    && images.Count > 0)
+{
+    <div class="d-flex flex-wrap gap-2 mt-2 mb-2">
+        @foreach (var image in images.OrderBy(image => image.SortOrder))
+        {
+            <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                 alt="Bild till kommentaren"
+                 class="img-fluid rounded"
+                 style="max-width: 180px; max-height: 180px; object-fit: contain;" />
+        }
+    </div>
+}
+                                        
+<small class="text-muted">
+    @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+</small>
 
     <br />
 
@@ -269,6 +324,8 @@ else
 
     private List<PostDto>? posts;
 
+    private Dictionary<int, List<PostImageDto>> postImages = new();
+
     private Dictionary<int, List<CommentDto>> comments = new();
 
     private Dictionary<int, bool> editingComments = new();
@@ -281,6 +338,15 @@ else
 
     private Dictionary<int, string> editedPostContents = new();
 
+    private Dictionary<int, List<CommentImageDto>> commentImages = new();
+
+    private IBrowserFile? selectedPostImage;
+
+    private void HandlePostImageSelected(InputFileChangeEventArgs e)
+    {
+        selectedPostImage = e.File;
+    }
+
     private Post newPost = new()
     {
         CategoryId = 2
@@ -290,21 +356,47 @@ else
     protected override async Task OnInitializedAsync()
     {
         posts = await PostsApiService.GetAllAsync();
-
+        
         if (posts == null)
         {
             return;
         }
 
+        // Hämta bilder för varje inlägg.
+        foreach (var post in posts)
+        {
+            var images =
+                await PostImagesApiService.GetByPostAsync(post.Id);
+
+            postImages[post.Id] =
+                images ?? new List<PostImageDto>();
+        }
+        
+        // Hämta kommentarer för varje inlägg.
         foreach (var post in posts)
         {
             var postComments =
-                await CommentsApiService.GetByPostAsync(post.Id);
+    await CommentsApiService.GetByPostAsync(post.Id);
 
             comments[post.Id] =
                 postComments ?? new List<CommentDto>();
 
+            // Hämta bilder för varje kommentar.
+            foreach (var comment in comments[post.Id])
+            {
+                var images =
+                    await CommentImagesApiService.GetByCommentAsync(comment.Id);
+
+                commentImages[comment.Id] =
+                    images ?? new List<CommentImageDto>();
+            }
+
             newCommentContent[post.Id] = string.Empty;
+        }
+
+        // Hämta kommentarbilder för varje kommentar.
+        foreach (var post in posts)
+        {
         }
     }
 
@@ -321,33 +413,57 @@ private async Task CreatePost()
     var createdPost =
         await PostsApiService.CreateAsync(newPost);
 
-
     if (createdPost == null)
     {
         return;
     }
-        
-    // Hämta alla inlägg igen.
-    // API:t sorterar dem efter CreatedAt, nyast först.
-        posts = await PostsApiService.GetAllAsync();
 
-        if (posts != null)
+    // Ladda upp och koppla bilden om användaren har valt en.
+    if (selectedPostImage != null)
+    {
+        var uploadedImage = await ApiService.UploadAsync<UploadedImageDto>(
+            "api/Images/upload",
+            selectedPostImage);
+
+        if (uploadedImage != null)
         {
-            posts = posts
-                .OrderByDescending(post => post.CreatedAt)
-                .ToList();
+            await ApiService.PostAsync(
+                $"api/Images/posts/{createdPost.Id}/images/{uploadedImage.Id}",
+                new { });
         }
+    }
+
+    // Hämta alla inlägg igen.
+    posts = await PostsApiService.GetAllAsync();
+
+    if (posts != null)
+    {
+        posts = posts
+            .OrderByDescending(post => post.CreatedAt)
+            .ToList();
+    }
 
     if (posts == null)
     {
         return;
     }
-        
-    comments[createdPost.Id] =
-        new List<CommentDto>();
 
-    newCommentContent[createdPost.Id] =
-        string.Empty;
+    // Hämta bilderna igen så att den nya bilden visas.
+    foreach (var post in posts)
+    {
+        var images =
+            await PostImagesApiService.GetByPostAsync(post.Id);
+
+        postImages[post.Id] =
+            images ?? new List<PostImageDto>();
+    }
+
+    // Förbered kommentarsfält för det nya inlägget.
+    comments[createdPost.Id] = new List<CommentDto>();
+    newCommentContent[createdPost.Id] = string.Empty;
+
+    // Återställ formuläret.
+    selectedPostImage = null;
 
     newPost = new Post
     {
@@ -533,7 +649,7 @@ private async Task CreatePost()
         {
             return;
         }
-
+        
         // Visa att inlägget har modererats istället för att
         // ta bort det från listan.
         post.IsDeleted = true;
@@ -547,7 +663,7 @@ private async Task CreatePost()
         comments.Remove(post.Id);
         newCommentContent.Remove(post.Id);
     }
-
+    
 }
 
 

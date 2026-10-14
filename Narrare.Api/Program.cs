@@ -25,7 +25,7 @@ namespace Narrare.Api
             {
                 app.MapOpenApi();
             }
-
+            
             app.UseHttpsRedirection();
 
             app.UseAuthorization();

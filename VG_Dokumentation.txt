@@ -17,3 +17,8 @@ admin: Skicka varning till användare samt se antal varningar(flyttat från G)
 databa på asher först 
 mata in databas
 hemsida efter
+
+bildgalleri admin och användare skillnad
+SixLabors för bildhantering
+
+"att fixa för testning" lös dessa innan publisering

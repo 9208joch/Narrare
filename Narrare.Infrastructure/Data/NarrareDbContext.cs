@@ -22,6 +22,8 @@ public class NarrareDbContext : DbContext
     public DbSet<Page> Pages => Set<Page>();
     public DbSet<PageContent> PageContents { get; set; }
     public DbSet<SiteStyle> SiteStyles { get; set; }
+    public DbSet<UploadedImage> UploadedImages => Set<UploadedImage>();
+    public DbSet<ImageUsage> ImageUsages => Set<ImageUsage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -194,5 +196,77 @@ public class NarrareDbContext : DbContext
             entity.HasIndex(page => page.Slug)
                 .IsUnique();
         });
+        modelBuilder.Entity<UploadedImage>(entity =>
+        {
+            entity.HasKey(image => image.Id);
+
+            entity.Property(image => image.FileName)
+                .IsRequired()
+                .HasMaxLength(255);
+
+            entity.Property(image => image.StoragePath)
+                .IsRequired()
+                .HasMaxLength(500);
+
+            entity.Property(image => image.ContentType)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(image => image.FileSize)
+                .IsRequired();
+
+            entity.Property(image => image.UploadedAt)
+                .IsRequired();
+
+            entity.HasOne(image => image.UploadedByUser)
+                .WithMany()
+                .HasForeignKey(image => image.UploadedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<ImageUsage>(entity =>
+        {
+            entity.HasKey(usage => usage.Id);
+
+            entity.HasOne(usage => usage.UploadedImage)
+                .WithMany()
+                .HasForeignKey(usage => usage.UploadedImageId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(usage => usage.Post)
+                .WithMany()
+                .HasForeignKey(usage => usage.PostId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(usage => usage.Comment)
+                .WithMany()
+                .HasForeignKey(usage => usage.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(usage => usage.IsInGallery)
+                .IsRequired();
+
+            entity.Property(usage => usage.SortOrder)
+                .IsRequired();
+
+            // En bildkoppling måste gälla antingen ett inlägg,
+            // en kommentar eller enbart galleriet.
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_ImageUsage_OneTarget",
+                """
+        (
+            [PostId] IS NOT NULL AND [CommentId] IS NULL AND [IsInGallery] = 0
+        )
+        OR
+        (
+            [PostId] IS NULL AND [CommentId] IS NOT NULL AND [IsInGallery] = 0
+        )
+        OR
+        (
+            [PostId] IS NULL AND [CommentId] IS NULL AND [IsInGallery] = 1
+        )
+        """));
+        });
+
     }
 } 

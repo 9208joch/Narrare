@@ -1,4 +1,5 @@
-﻿using System.Net.Http.Json;
+﻿using Microsoft.AspNetCore.Components.Forms;
+using System.Net.Http.Json;
 
 namespace Narrare.Web.Services;
 
@@ -101,5 +102,38 @@ public class ApiService
         var response = await client.DeleteAsync(url);
 
         return response.IsSuccessStatusCode;
+    }
+    public async Task<TResponse?> UploadAsync<TResponse>(
+    string url,
+    IBrowserFile file)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        using var content = new MultipartFormDataContent();
+        using var fileStream = file.OpenReadStream(20 * 1024 * 1024);
+        using var streamContent = new StreamContent(fileStream);
+        
+        streamContent.Headers.ContentType =
+            new System.Net.Http.Headers.MediaTypeHeaderValue(
+                file.ContentType);
+
+        content.Add(streamContent, "file", file.Name);
+
+        var response = await client.PostAsync(url, content);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var error = await response.Content.ReadAsStringAsync();
+
+            throw new HttpRequestException(
+                $"Bilduppladdningen misslyckades. " +
+                $"Status: {(int)response.StatusCode} " +
+                $"{response.StatusCode}. " +
+                $"Svar: {error}");
+        }
+
+        return await response.Content.ReadFromJsonAsync<TResponse>();
     }
 }

@@ -112,6 +112,43 @@ namespace Narrare.Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("Narrare.Domain.Entities.ImageUsage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsInGallery")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UploadedImageId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UploadedImageId");
+
+                    b.ToTable("ImageUsages", t =>
+                        {
+                            t.HasCheckConstraint("CK_ImageUsage_OneTarget", "(\r\n    [PostId] IS NOT NULL AND [CommentId] IS NULL AND [IsInGallery] = 0\r\n)\r\nOR\r\n(\r\n    [PostId] IS NULL AND [CommentId] IS NOT NULL AND [IsInGallery] = 0\r\n)\r\nOR\r\n(\r\n    [PostId] IS NULL AND [CommentId] IS NULL AND [IsInGallery] = 1\r\n)");
+                        });
+                });
+
             modelBuilder.Entity("Narrare.Domain.Entities.MenuItem", b =>
                 {
                     b.Property<int>("Id")
@@ -332,6 +369,45 @@ namespace Narrare.Infrastructure.Migrations
                     b.ToTable("SiteStyles");
                 });
 
+            modelBuilder.Entity("Narrare.Domain.Entities.UploadedImage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ContentType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("StoragePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("UploadedByUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("UploadedImages");
+                });
+
             modelBuilder.Entity("Narrare.Domain.Entities.User", b =>
                 {
                     b.Property<int>("Id")
@@ -410,6 +486,31 @@ namespace Narrare.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Narrare.Domain.Entities.ImageUsage", b =>
+                {
+                    b.HasOne("Narrare.Domain.Entities.Comment", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Narrare.Domain.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Narrare.Domain.Entities.UploadedImage", "UploadedImage")
+                        .WithMany()
+                        .HasForeignKey("UploadedImageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("UploadedImage");
+                });
+
             modelBuilder.Entity("Narrare.Domain.Entities.PageContent", b =>
                 {
                     b.HasOne("Narrare.Domain.Entities.Page", "Page")
@@ -438,6 +539,17 @@ namespace Narrare.Infrastructure.Migrations
                     b.Navigation("Category");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Narrare.Domain.Entities.UploadedImage", b =>
+                {
+                    b.HasOne("Narrare.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("Narrare.Domain.Entities.Category", b =>
