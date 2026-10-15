@@ -112,27 +112,37 @@ public class PostsController : ControllerBase
         return Ok(result);
     }
 
+
     [HttpGet("category/{categoryId}")]
     public async Task<ActionResult<List<PostDto>>> GetByCategory(int categoryId)
     {
         var posts = await _postService.GetByCategoryAsync(categoryId);
+        var result = new List<PostDto>();
 
-        var result = posts.Select(post => new PostDto
-{
-    Id = post.Id,
-    Title = post.Title,
-    Content = post.Content,
-    CreatedAt = post.CreatedAt,
-    UpdatedAt = post.UpdatedAt,
-    UserId = post.UserId,
-    CategoryId = post.CategoryId,
-    IsDeleted = post.IsDeleted,
-    DeletedByUserId = post.DeletedByUserId,
-    DeletedAt = post.DeletedAt
-}).ToList();
+        foreach (var post in posts)
+        {
+            var author = await _userService.GetByIdAsync(post.UserId);
+
+            result.Add(new PostDto
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Content = post.Content,
+                CreatedAt = post.CreatedAt,
+                UpdatedAt = post.UpdatedAt,
+                UserId = post.UserId,
+                Username = author?.Username ?? "Okänd användare",
+                ProfileImageUrl = author?.ProfileImageUrl,
+                CategoryId = post.CategoryId,
+                IsDeleted = post.IsDeleted,
+                DeletedByUserId = post.DeletedByUserId,
+                DeletedAt = post.DeletedAt
+            });
+        }
 
         return Ok(result);
     }
+
 
     [HttpPut("{id}")]
     public async Task<ActionResult<PostDto>> Update(
@@ -224,7 +234,7 @@ public class PostsController : ControllerBase
         {
             return Forbid();
         }
-
+        
         post.IsDeleted = true;
         post.DeletedByUserId = currentUser.Id;
         post.DeletedAt = DateTime.UtcNow;

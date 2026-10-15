@@ -1,0 +1,243 @@
+﻿@page "/admin/categories"
+
+@using Narrare.Domain.Entities
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject CategoriesApiService CategoriesApiService
+@inject CurrentUserService CurrentUserService
+
+<h1>Administrera kategorier</h1>
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <div class="alert alert-warning">
+        Du måste vara inloggad som administratör.
+    </div>
+}
+else if (CurrentUserService.CurrentUser!.Role !=
+         Narrare.Domain.Enums.UserRole.Admin)
+{
+    <div class="alert alert-danger">
+        Du har inte behörighet att administrera kategorier.
+    </div>
+}
+else if (categories == null)
+{
+    <p>Laddar kategorier...</p>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h3>Skapa kategori</h3>
+
+            <div class="mb-3">
+                <label class="form-label">Namn</label>
+                <input class="form-control"
+                       @bind="newCategory.Name" />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Beskrivning</label>
+                <textarea class="form-control"
+                          @bind="newCategory.Description">
+                </textarea>
+            </div>
+
+            <button class="btn btn-success"
+                    @onclick="CreateCategory">
+                Skapa kategori
+            </button>
+        </div>
+    </div>
+
+    <h3>Befintliga kategorier</h3>
+
+    @if (categories.Count == 0)
+    {
+        <p>Det finns inga kategorier ännu.</p>
+    }
+    else
+    {
+        @foreach (var category in categories)
+        {
+            <div class="card mb-3" @key="category.Id">
+                <div class="card-body">
+                    @if (editingCategoryId == category.Id)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Namn</label>
+                            <input class="form-control"
+                                   @bind="editCategory.Name" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Beskrivning</label>
+                            <textarea class="form-control"
+                                      @bind="editCategory.Description">
+                            </textarea>
+                        </div>
+
+                        <button class="btn btn-success me-2"
+                                @onclick="() => UpdateCategory(category.Id)">
+                            Spara ändringar
+                        </button>
+
+                        <button class="btn btn-secondary"
+                                @onclick="CancelEdit">
+                            Avbryt
+                        </button>
+                    }
+                    else
+                    {
+                        <h4>@category.Name</h4>
+                        <p>@category.Description</p>
+
+                        <button class="btn btn-primary me-2"
+                                @onclick="() => StartEdit(category)">
+                            Redigera
+                        </button>
+
+                        <button class="btn btn-danger"
+                                @onclick="() => DeleteCategory(category.Id)">
+                            Ta bort
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+    @if (!string.IsNullOrWhiteSpace(message))
+    {
+        <div class="alert alert-success mt-3">@message</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger mt-3">@errorMessage</div>
+    }
+}
+
+@code {
+    private List<CategoryDto>? categories;
+
+    private Category newCategory = new();
+
+    private Category editCategory = new();
+
+    private int? editingCategoryId;
+
+    private string? message;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn ||
+            CurrentUserService.CurrentUser!.Role !=
+            Narrare.Domain.Enums.UserRole.Admin)
+        {
+            return;
+        }
+
+        await LoadCategories();
+    }
+
+    private async Task LoadCategories()
+    {
+        categories = await CategoriesApiService.GetAllAsync();
+    }
+
+    private async Task CreateCategory()
+    {
+        message = null;
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(newCategory.Name))
+        {
+            errorMessage = "Kategorin måste ha ett namn.";
+            return;
+        }
+
+        var created = await CategoriesApiService.CreateAsync(newCategory);
+
+        if (created == null)
+        {
+            errorMessage = "Kunde inte skapa kategorin.";
+            return;
+        }
+
+        newCategory = new Category();
+        await LoadCategories();
+
+        message = "Kategorin har skapats.";
+    }
+
+    private void StartEdit(CategoryDto category)
+    {
+        editingCategoryId = category.Id;
+
+        editCategory = new Category
+        {
+            Name = category.Name,
+            Description = category.Description
+        };
+
+        message = null;
+        errorMessage = null;
+    }
+
+    private void CancelEdit()
+    {
+        editingCategoryId = null;
+        editCategory = new Category();
+    }
+
+    private async Task UpdateCategory(int id)
+    {
+        message = null;
+        errorMessage = null;
+
+        if (string.IsNullOrWhiteSpace(editCategory.Name))
+        {
+            errorMessage = "Kategorin måste ha ett namn.";
+            return;
+        }
+
+        var updated = await CategoriesApiService.UpdateAsync(
+            id, editCategory);
+
+        if (updated == null)
+        {
+            errorMessage = "Kunde inte uppdatera kategorin.";
+            return;
+        }
+
+        editingCategoryId = null;
+        editCategory = new Category();
+
+        await LoadCategories();
+
+        message = "Kategorin har uppdaterats.";
+    }
+
+    private async Task DeleteCategory(int id)
+    {
+        message = null;
+        errorMessage = null;
+
+        var deleted = await CategoriesApiService.DeleteAsync(id);
+
+        if (!deleted)
+        {
+            errorMessage =
+                "Kunde inte ta bort kategorin. Kontrollera om den innehåller inlägg.";
+            return;
+        }
+
+        await LoadCategories();
+
+        message = "Kategorin har tagits bort.";
+    }
+}

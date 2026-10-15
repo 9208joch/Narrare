@@ -7,7 +7,7 @@ namespace Narrare.Application.Interfaces.Services;
 
 public interface ISiteStyleService
 {
-    Task<SiteStyle?> GetAsync();
+    Task<SiteStyle?> GetAsync(int? pageId = null);
 
     Task<SiteStyle> CreateAsync(SiteStyle siteStyle);
 

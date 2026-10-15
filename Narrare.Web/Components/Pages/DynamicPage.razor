@@ -64,23 +64,28 @@
                 @switch (content.Type.ToLower())
                 {
                     case "heading":
-                        <h2>@content.Content</h2>
+                        <h2 class="dynamic-page-heading">
+                            @content.Content
+                        </h2>
                         break;
 
                     case "text":
-                        <p>@content.Content</p>
+                        <p class="dynamic-page-text">
+                            @content.Content
+                        </p>
                         break;
 
                     case "image":
                         <img src="@content.Content"
                              alt="@currentPage.Title"
-                             class="page-image" />
+                             class="dynamic-page-image" />
                         break;
 
                     case "link":
                         <a href="@content.Content"
                            target="_blank"
-                           rel="noopener noreferrer">
+                           rel="noopener noreferrer"
+                           class="dynamic-page-link">
                             @content.Content
                         </a>
                         break;
@@ -138,8 +143,15 @@
         contents =
             await PageContentApiService.GetByPageIdAsync(currentPage.Id);
 
-        // Hämta webbplatsens styling
+        // Försök hämta styling för den aktuella sidan.
         siteStyle =
-            await SiteStyleApiService.GetAsync();
+            await SiteStyleApiService.GetAsync(currentPage.Id);
+
+        // Använd global styling om sidan saknar egen styling.
+        if (siteStyle == null)
+        {
+            siteStyle =
+                await SiteStyleApiService.GetAsync();
+        }
     }
 }

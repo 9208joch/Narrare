@@ -93,7 +93,7 @@ public class UsersController : ControllerBase
 
         return Ok(result);
     }
-
+    
     [HttpPost("login")]
     public async Task<ActionResult<UserDto>> Login(LoginUserDto dto)
     {
@@ -105,5 +105,38 @@ public class UsersController : ControllerBase
         }
 
         return Ok(user);
+    }
+    [HttpPut("profile")]
+    public async Task<IActionResult> UpdateProfile(UpdateProfileDto dto)
+    {
+        // Hämta den inloggade användarens ID.
+        if (!Request.Headers.TryGetValue("X-User-Id", out var userIdValue) ||
+            !int.TryParse(userIdValue, out var userId))
+        {
+            return Unauthorized();
+        }
+
+        // Hämta användaren från databasen.
+        var user = await _userService.GetByIdAsync(userId);
+
+        if (user == null)
+        {
+            return Unauthorized();
+        }
+
+        // Uppdatera endast tillåtna profiluppgifter.
+        user.Age = dto.Age;
+        user.Location = dto.Location;
+        user.Occupation = dto.Occupation;
+        user.ProfileImageUrl = dto.ProfileImageUrl;
+        user.ShowAge = dto.ShowAge;
+        user.ShowLocation = dto.ShowLocation;
+        user.ShowOccupation = dto.ShowOccupation;
+
+        user.IsProfileComplete = true;
+
+        await _userService.UpdateAsync(user);
+
+        return NoContent();
     }
 }

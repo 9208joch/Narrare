@@ -100,6 +100,7 @@ public class ImagesController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    
     [HttpGet("gallery")]
     public async Task<IActionResult> GetGalleryImages()
     {
@@ -331,7 +332,7 @@ public class ImagesController : ControllerBase
             usage.UploadedImage.FileSize,
             usage.SortOrder
         });
-
+        
         return Ok(result);
     }
     [HttpGet("{id:int}")]
@@ -359,5 +360,5 @@ public class ImagesController : ControllerBase
             "image/jpeg");
     }
 
-
+    
 }

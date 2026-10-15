@@ -142,26 +142,37 @@ public class CommentsController : ControllerBase
 
         return Ok(result);
     }
+
     [HttpGet("post/{postId}")]
     public async Task<ActionResult<List<CommentDto>>> GetByPost(int postId)
     {
         var comments = await _commentService.GetByPostAsync(postId);
-        
-        var result = comments.Select(comment => new CommentDto
+        var result = new List<CommentDto>();
+
+        foreach (var comment in comments)
         {
-            Id = comment.Id,
-            Content = comment.Content,
-            CreatedAt = comment.CreatedAt,
-            UpdatedAt = comment.UpdatedAt,
-            UserId = comment.UserId,
-            PostId = comment.PostId,
-            IsDeleted = comment.IsDeleted,
-            DeletedByUserId = comment.DeletedByUserId,
-            DeletedAt = comment.DeletedAt
-        }).ToList();
+            var author = await _userService.GetByIdAsync(comment.UserId);
+            
+            result.Add(new CommentDto
+            {
+                Id = comment.Id,
+                Content = comment.Content,
+                CreatedAt = comment.CreatedAt,
+                UpdatedAt = comment.UpdatedAt,
+                UserId = comment.UserId,
+                Username = author?.Username ?? "Okänd användare",
+                ProfileImageUrl = author?.ProfileImageUrl,
+                PostId = comment.PostId,
+                IsDeleted = comment.IsDeleted,
+                DeletedByUserId = comment.DeletedByUserId,
+                DeletedAt = comment.DeletedAt
+            });
+        }
 
         return Ok(result);
     }
+
+
     [HttpPost]
     public async Task<ActionResult<CommentDto>> Create([FromBody] Comment comment)
     {
@@ -177,6 +188,9 @@ public class CommentsController : ControllerBase
 
         var createdComment = await _commentService.CreateAsync(comment);
 
+        // Hämta användaren som skrev kommentaren.
+        var author = await _userService.GetByIdAsync(createdComment.UserId);
+
         var result = new CommentDto
         {
             Id = createdComment.Id,
@@ -184,11 +198,14 @@ public class CommentsController : ControllerBase
             CreatedAt = createdComment.CreatedAt,
             UpdatedAt = createdComment.UpdatedAt,
             UserId = createdComment.UserId,
+            Username = author?.Username ?? "Okänd användare",
+            ProfileImageUrl = author?.ProfileImageUrl,
             PostId = createdComment.PostId
         };
 
         return Ok(result);
     }
+
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {

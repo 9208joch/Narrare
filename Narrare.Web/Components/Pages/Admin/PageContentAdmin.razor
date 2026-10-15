@@ -2,10 +2,12 @@
 
 @using Narrare.Domain.Entities
 @using Narrare.Web.Services
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject PagesApiService PagesApiService
 @inject PageContentApiService PageContentApiService
 @inject CurrentUserService CurrentUserService
+@inject ApiService ApiService
 
 <h1>Administrera sidinnehåll</h1>
 
@@ -71,15 +73,56 @@ else
                     </select>
                 </div>
 
+                
                 <div class="mb-3">
                     <label class="form-label">Innehåll</label>
 
-                    <textarea class="form-control"
-                              rows="5"
-                              @bind="newContent.Content">
-                    </textarea>
+                    @if (newContent.Type == "image")
+                    {
+                        <InputFile OnChange="HandleImageSelected"
+                                   accept="image/jpeg,image/png,image/webp"
+                                   class="form-control" />
+
+                        @if (selectedImage != null)
+                        {
+                            <p class="mt-2">
+                                Vald bild: @selectedImage.Name
+                            </p>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(imageMessage))
+                        {
+                            <div class="alert alert-danger mt-2">
+                                @imageMessage
+                            </div>
+                        }
+
+                        <small class="text-muted">
+                            JPG, PNG eller WebP. Max 20 MB.
+                        </small>
+                    }
+                    else if (newContent.Type == "heading")
+                    {
+                        <input class="form-control"
+                               @bind="newContent.Content"
+                               placeholder="Skriv rubriken" />
+                    }
+                    else if (newContent.Type == "link")
+                    {
+                        <input class="form-control"
+                               @bind="newContent.Content"
+                               placeholder="https://exempel.se" />
+                    }
+                    else
+                    {
+                        <textarea class="form-control"
+                                  rows="5"
+                                  @bind="newContent.Content">
+        </textarea>
+                    }
                 </div>
 
+                
                 <div class="mb-3">
                     <label class="form-label">Ordning</label>
 
@@ -181,6 +224,16 @@ else
 
     private string? errorMessage;
 
+    private IBrowserFile? selectedImage;
+
+    private string? imageMessage;
+
+    private void HandleImageSelected(InputFileChangeEventArgs e)
+    {
+        selectedImage = e.File;
+        imageMessage = null;
+    }
+    
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUserService.IsLoggedIn)
@@ -226,9 +279,11 @@ else
         };
     }
 
+    
     private async Task CreateContent()
     {
         errorMessage = null;
+        imageMessage = null;
 
         if (selectedPageId <= 0)
         {
@@ -236,7 +291,35 @@ else
             return;
         }
 
-        if (string.IsNullOrWhiteSpace(newContent.Content))
+        if (newContent.Type == "image")
+        {
+            if (selectedImage == null)
+            {
+                errorMessage = "Välj en bild först.";
+                return;
+            }
+
+            if (selectedImage.Size > 20 * 1024 * 1024)
+            {
+                errorMessage = "Bilden får inte vara större än 20 MB.";
+                return;
+            }
+
+            var uploadedImage =
+                await ApiService.UploadAsync<UploadedImageDto>(
+                    "api/Images/upload",
+                    selectedImage);
+
+            if (uploadedImage == null)
+            {
+                errorMessage = "Bilduppladdningen misslyckades.";
+                return;
+            }
+
+            newContent.Content =
+                $"https://localhost:7206/api/Images/{uploadedImage.Id}";
+        }
+        else if (string.IsNullOrWhiteSpace(newContent.Content))
         {
             errorMessage = "Innehåll måste anges.";
             return;
@@ -254,12 +337,13 @@ else
         }
 
         contents ??= new List<PageContent>();
-
         contents.Add(result);
 
         contents = contents
             .OrderBy(x => x.Order)
             .ToList();
+
+        selectedImage = null;
 
         newContent = new PageContent
         {
@@ -268,6 +352,7 @@ else
             Order = contents.Count + 1
         };
     }
+
 
     private void EditContent(PageContent content)
     {

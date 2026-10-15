@@ -19,19 +19,30 @@
         <div class="desktop-menu">
             @foreach (var menuItem in menuItems)
             {
-                if (CurrentUserService.IsLoggedIn &&
-                    menuItem.Url == "/login")
+                @if (CurrentUserService.IsLoggedIn &&
+                 (menuItem.Url == "/login" ||
+                 menuItem.Url == "/register"))
                 {
                     continue;
                 }
-
+                
                 <a href="@menuItem.Url">@menuItem.Name</a>
+            }
+            @if (!CurrentUserService.IsLoggedIn)
+            {
+                <a href="/register">Registrera</a>
             }
 
             @if (IsAdmin)
             {
                 <a class="menu-admin" href="/admin">
                     Administration
+                </a>
+            }
+            @if (CurrentUserService.IsLoggedIn)
+            {
+                <a href="/profile">
+                    Min profil
                 </a>
             }
 
@@ -71,7 +82,8 @@
                 <div class="mobile-menu-links">
                     @foreach (var menuItem in menuItems)
                     {
-                        if (menuItem.Url == "/login")
+                        if (menuItem.Url == "/login" ||
+                            menuItem.Url == "/register")
                         {
                             continue;
                         }
@@ -79,6 +91,21 @@
                         <a href="@menuItem.Url"
                            @onclick="CloseMobileMenu">
                             @menuItem.Name
+                        </a>
+                    }
+
+                    @if (!CurrentUserService.IsLoggedIn)
+                    {
+                        <a href="/register"
+                           @onclick="CloseMobileMenu">
+                            Registrera
+                        </a>
+                    }
+                    @if (CurrentUserService.IsLoggedIn)
+                    {
+                        <a href="/profile"
+                           @onclick="CloseMobileMenu">
+                            Min profil
                         </a>
                     }
 
@@ -115,7 +142,7 @@
     {
         mobileMenuOpen = !mobileMenuOpen;
     }
-
+    
     private void CloseMobileMenu()
     {
         mobileMenuOpen = false;

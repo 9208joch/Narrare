@@ -67,7 +67,7 @@ public class UserService : IUserService
     public async Task<UserDto?> LoginAsync(LoginUserDto dto)
     {
         var user = await _userRepository.GetByUsernameAsync(dto.Username);
-
+        
         if (user == null)
         {
             return null;
@@ -91,6 +91,7 @@ public class UserService : IUserService
             Location = user.Location,
             Occupation = user.Occupation,
             ProfileImageUrl = user.ProfileImageUrl,
+            IsProfileComplete = user.IsProfileComplete,
             ShowAge = user.ShowAge,
             ShowLocation = user.ShowLocation,
             ShowOccupation = user.ShowOccupation,

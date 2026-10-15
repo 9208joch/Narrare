@@ -29,4 +29,6 @@ public class UserDto
     public DateTime CreatedAt { get; set; }
 
     public UserRole Role { get; set; }
+
+    public bool IsProfileComplete { get; set; }
 }

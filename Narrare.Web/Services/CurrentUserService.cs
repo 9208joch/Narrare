@@ -15,7 +15,11 @@ public class CurrentUserService
         CurrentUser = user;
         OnChange?.Invoke();
     }
-
+    public void UpdateUser(UserDto user)
+    {
+        CurrentUser = user;
+        OnChange?.Invoke();
+    }
     public void Logout()
     {
         CurrentUser = null;

@@ -2,8 +2,11 @@
 
 @using Narrare.Application.DTOs
 @using Narrare.Web.Services
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject UsersApiService UsersApiService
+@inject ApiService ApiService
+@inject NavigationManager NavigationManager
 
 <h1 class="mb-4">Registrera konto</h1>
 
@@ -48,10 +51,10 @@
         </div>
 
         <div class="mb-3">
-            <label class="form-label">Profilbild URL</label>
-
-            <input class="form-control"
-                   @bind="user.ProfileImageUrl" />
+            <label class="form-label">Profilbild</label>
+            <InputFile OnChange="OnProfileImageSelected"
+                       accept="image/*"
+                       class="form-control" />
         </div>
 
         <button class="btn btn-primary"
@@ -78,16 +81,51 @@
     {
         message = null;
 
-        var result = await UsersApiService.RegisterAsync(user);
-
-        if (result == null)
+        try
         {
-            message = "Registreringen misslyckades.";
-            return;
+            // Ladda upp profilbilden om en bild har valts.
+            if (selectedProfileImage != null)
+            {
+                var uploadedImage =
+                    await ApiService.UploadAsync<UploadedImageDto>(
+                        "api/Images/upload",
+                        selectedProfileImage);
+
+                if (uploadedImage == null)
+                {
+                    message = "Profilbilden kunde inte laddas upp.";
+                    return;
+                }
+
+                // Spara bildens API-adress på användaren.
+                user.ProfileImageUrl =
+                    $"https://localhost:7206/api/Images/{uploadedImage.Id}";
+            }
+
+            // Registrera användaren med profilbildens adress.
+            var result = await UsersApiService.RegisterAsync(user);
+
+            if (result == null)
+            {
+                message = "Registreringen misslyckades.";
+                return;
+            }
+
+            message = $"Användaren {result.Username} skapades!";
+
+            user = new RegisterUserDto();
+            selectedProfileImage = null;
         }
-
-        message = $"Användaren {result.Username} skapades!";
-
-        user = new RegisterUserDto();
+        catch (HttpRequestException ex)
+        {
+            message = $"Ett fel uppstod vid uppladdningen: {ex.Message}";
+        }
+    }
+    private IBrowserFile? selectedProfileImage;
+    
+    private void OnProfileImageSelected(
+        InputFileChangeEventArgs e)
+    {
+        selectedProfileImage = e.File;
     }
 }

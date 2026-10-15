@@ -5,6 +5,8 @@
 
 @inject SiteStyleApiService SiteStyleApiService
 @inject CurrentUserService CurrentUserService
+@inject PagesApiService PagesApiService
+@inject NavigationManager Navigation
 
 <h1>Administrera styling</h1>
 
@@ -21,198 +23,171 @@ else if (CurrentUserService.CurrentUser!.Role !=
         Du har inte behörighet att administrera styling.
     </div>
 }
-else if (siteStyle == null)
-{
-    <p>Laddar...</p>
-}
 else
 {
-    <div class="card mb-4">
-        <div class="card-body">
-
-            <h3>Rubrik</h3>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Storlek (px)
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       @bind="siteStyle.HeadingFontSize" />
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input"
-                       type="checkbox"
-                       @bind="siteStyle.HeadingBold" />
-
-                <label class="form-check-label">
-                    Fetstil
-                </label>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Färg
-                </label>
-
-                <input class="form-control"
-                       type="text"
-                       @bind="siteStyle.HeadingColor" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Marginal under (px)
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       @bind="siteStyle.HeadingMarginBottom" />
-            </div>
-
-        </div>
-    </div>
-
-
-    <div class="card mb-4">
-        <div class="card-body">
-
-            <h3>Text</h3>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Storlek (px)
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       @bind="siteStyle.TextFontSize" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Färg
-                </label>
-
-                <input class="form-control"
-                       type="text"
-                       @bind="siteStyle.TextColor" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Radavstånd
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       step="0.1"
-                       @bind="siteStyle.TextLineHeight" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Marginal under (px)
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       @bind="siteStyle.TextMarginBottom" />
-            </div>
-
-        </div>
-    </div>
-
-
-    <div class="card mb-4">
-        <div class="card-body">
-
-            <h3>Bild</h3>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Maxbredd (%)
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       @bind="siteStyle.ImageMaxWidth" />
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Rundade hörn (px)
-                </label>
-
-                <input class="form-control"
-                       type="number"
-                       @bind="siteStyle.ImageBorderRadius" />
-            </div>
-
-        </div>
-    </div>
-
-
-    <div class="card mb-4">
-        <div class="card-body">
-
-            <h3>Länk</h3>
-
-            <div class="mb-3">
-                <label class="form-label">
-                    Färg
-                </label>
-
-                <input class="form-control"
-                       type="text"
-                       @bind="siteStyle.LinkColor" />
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input"
-                       type="checkbox"
-                       @bind="siteStyle.LinkBold" />
-
-                <label class="form-check-label">
-                    Fetstil
-                </label>
-            </div>
-
-            <div class="form-check mb-3">
-                <input class="form-check-input"
-                       type="checkbox"
-                       @bind="siteStyle.LinkUnderline" />
-
-                <label class="form-check-label">
-                    Understrykning
-                </label>
-            </div>
-
-        </div>
-    </div>
-
-
-    <button class="btn btn-success"
-            @onclick="Save">
-        Spara styling
-    </button>
-
-    @if (!string.IsNullOrWhiteSpace(message))
+    @if (pages != null)
     {
-        <div class="alert alert-success mt-3">
-            @message
+        <div class="mb-4">
+            <label class="form-label">Välj sida att styla</label>
+
+            <select class="form-select"
+                    @bind="selectedPageId"
+                    @bind:after="LoadStyle">
+
+                <option value="">Global styling</option>
+
+                @foreach (var item in pages)
+                {
+                    <option value="@item.Id">@item.Title</option>
+                }
+            </select>
         </div>
     }
 
-    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    @if (siteStyle == null)
     {
-        <div class="alert alert-danger mt-3">
-            @errorMessage
+        <p>Laddar...</p>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Rubrik</h3>
+
+                <div class="mb-3">
+                    <label class="form-label">Storlek (px)</label>
+                    <input class="form-control"
+                           type="number"
+                           @bind="siteStyle.HeadingFontSize" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           @bind="siteStyle.HeadingBold" />
+                    <label class="form-check-label">Fetstil</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Färg</label>
+                    <input class="form-control"
+                           type="text"
+                           @bind="siteStyle.HeadingColor" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Marginal under (px)</label>
+                    <input class="form-control"
+                           type="number"
+                           @bind="siteStyle.HeadingMarginBottom" />
+                </div>
+            </div>
         </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Text</h3>
+
+                <div class="mb-3">
+                    <label class="form-label">Storlek (px)</label>
+                    <input class="form-control"
+                           type="number"
+                           @bind="siteStyle.TextFontSize" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Färg</label>
+                    <input class="form-control"
+                           type="text"
+                           @bind="siteStyle.TextColor" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Radavstånd</label>
+                    <input class="form-control"
+                           type="number"
+                           step="0.1"
+                           @bind="siteStyle.TextLineHeight" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Marginal under (px)</label>
+                    <input class="form-control"
+                           type="number"
+                           @bind="siteStyle.TextMarginBottom" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Bild</h3>
+
+                <div class="mb-3">
+                    <label class="form-label">Maxbredd (%)</label>
+                    <input class="form-control"
+                           type="number"
+                           @bind="siteStyle.ImageMaxWidth" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Rundade hörn (px)</label>
+                    <input class="form-control"
+                           type="number"
+                           @bind="siteStyle.ImageBorderRadius" />
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Länk</h3>
+
+                <div class="mb-3">
+                    <label class="form-label">Färg</label>
+                    <input class="form-control"
+                           type="text"
+                           @bind="siteStyle.LinkColor" />
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           @bind="siteStyle.LinkBold" />
+                    <label class="form-check-label">Fetstil</label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input"
+                           type="checkbox"
+                           @bind="siteStyle.LinkUnderline" />
+                    <label class="form-check-label">Understrykning</label>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-success" @onclick="Save">
+            Spara styling
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(message))
+        {
+            <div class="alert alert-success mt-3">
+                @message
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="alert alert-danger mt-3">
+                @errorMessage
+            </div>
+        }
     }
 }
+
+
+
 
 @code
 {
@@ -221,25 +196,36 @@ else
     private string? message;
     private string? errorMessage;
 
+    private List<Page>? pages;
+    private int? selectedPageId;
+
     protected override async Task OnInitializedAsync()
     {
-        if (!CurrentUserService.IsLoggedIn)
-        {
-            return;
-        }
-
-        if (CurrentUserService.CurrentUser!.Role !=
+        if (!CurrentUserService.IsLoggedIn ||
+            CurrentUserService.CurrentUser!.Role !=
             Narrare.Domain.Enums.UserRole.Admin)
         {
             return;
         }
 
-        siteStyle = await SiteStyleApiService.GetAsync();
+        pages = await PagesApiService.GetAllAsync();
+
+        await LoadStyle();
+    }
+
+    private async Task LoadStyle()
+    {
+        message = null;
+        errorMessage = null;
+
+        siteStyle = await SiteStyleApiService.GetAsync(selectedPageId);
 
         if (siteStyle == null)
         {
             siteStyle = new SiteStyle
             {
+                PageId = selectedPageId,
+
                 HeadingFontSize = 32,
                 HeadingBold = true,
                 HeadingColor = "#000000",
@@ -269,6 +255,9 @@ else
         {
             return;
         }
+
+        // Säkerställ att stylingen hör till vald sida.
+        siteStyle.PageId = selectedPageId;
 
         if (siteStyle.Id == 0)
         {

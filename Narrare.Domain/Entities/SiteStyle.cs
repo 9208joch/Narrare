@@ -7,7 +7,7 @@ namespace Narrare.Domain.Entities;
 public class SiteStyle
 {
     public int Id { get; set; }
-
+    public int? PageId { get; set; }
     // Rubrik
     public int HeadingFontSize { get; set; }
     public bool HeadingBold { get; set; }

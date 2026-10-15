@@ -49,14 +49,26 @@
             </div>
         }
 
+        
         @if (loggedInUser != null)
         {
             <div class="alert alert-success mt-3">
                 <p>Välkommen, @loggedInUser.Username!</p>
-
-                
             </div>
+
+            @if (!loggedInUser.IsProfileComplete)
+            {
+                <div class="alert alert-info mt-3">
+                    <p><strong>Din profil är inte färdig ännu.</strong></p>
+                    <p>Komplettera din profil med dina uppgifter och en profilbild.</p>
+
+                    <a href="/profile" class="btn btn-primary">
+                        Färdigställ min profil
+                    </a>
+                </div>
+            }
         }
+
 
     </div>
 </div>
@@ -83,6 +95,7 @@
 
         CurrentUserService.Login(result);
         
+
         loggedInUser = result;
     }
     private void Logout()

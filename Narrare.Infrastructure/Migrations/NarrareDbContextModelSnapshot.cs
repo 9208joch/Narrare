@@ -351,6 +351,9 @@ namespace Narrare.Infrastructure.Migrations
                     b.Property<bool>("LinkUnderline")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("PageId")
+                        .HasColumnType("int");
+
                     b.Property<string>("TextColor")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -423,6 +426,9 @@ namespace Narrare.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsBlocked")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsProfileComplete")
                         .HasColumnType("bit");
 
                     b.Property<string>("Location")

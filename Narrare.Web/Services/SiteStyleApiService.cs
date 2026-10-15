@@ -10,11 +10,14 @@ public class SiteStyleApiService
     {
         _apiService = apiService;
     }
-    
-    public async Task<SiteStyle?> GetAsync()
+
+    public async Task<SiteStyle?> GetAsync(int? pageId = null)
     {
-        return await _apiService.GetAsync<SiteStyle>(
-            "api/SiteStyle");
+        var url = pageId.HasValue
+            ? $"api/SiteStyle?pageId={pageId.Value}"
+            : "api/SiteStyle";
+
+        return await _apiService.GetAsync<SiteStyle>(url);
     }
 
     public async Task<SiteStyle?> CreateAsync(

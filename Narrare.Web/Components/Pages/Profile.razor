@@ -1,0 +1,202 @@
+﻿@page "/profile"
+
+@using Narrare.Application.DTOs
+@using Microsoft.AspNetCore.Components.Forms
+@using Narrare.Web.Services
+
+@inject CurrentUserService CurrentUserService
+@inject UsersApiService UsersApiService
+@inject ApiService ApiService
+
+<PageTitle>Min profil – Narrare</PageTitle>
+
+<div class="page-container">
+    <h1>Min profil</h1>
+    @if (CurrentUserService.IsLoggedIn &&
+     !CurrentUserService.CurrentUser!.IsProfileComplete)
+{
+    <div class="alert alert-info">
+        <strong>Din profil är inte färdig ännu.</strong>
+        Fyll i dina uppgifter och klicka på Spara profil.
+    </div>
+}
+    
+    @if (!CurrentUserService.IsLoggedIn)
+    {
+        <p>Du måste logga in för att visa din profil.</p>
+    }
+    else 
+    {
+        <div class="card">
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(profile.ProfileImageUrl))
+                {
+                    <img src="@profile.ProfileImageUrl"
+                         alt="Profilbild"
+                         class="rounded-circle mb-3"
+                         style="width: 150px; height: 150px; object-fit: cover;" />
+                }
+
+                <h2>@CurrentUserService.CurrentUser!.Username</h2>
+                <div class="mb-3">
+                    <label class="form-label">Profilbild</label>
+
+                    <InputFile OnChange="OnProfileImageSelected"
+                               accept="image/jpeg,image/png,image/webp"
+                               class="form-control" />
+
+                    @if (selectedProfileImage != null)
+                    {
+                        <p class="mt-2">
+                            Vald bild: @selectedProfileImage.Name
+                        </p>
+                    }
+
+                    <small class="text-muted">
+                        JPG, PNG eller WebP. Max 20 MB.
+                    </small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Ålder</label>
+                    <InputNumber class="form-control"
+                                 @bind-Value="profile.Age" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Ort</label>
+                    <InputText class="form-control"
+                               @bind-Value="profile.Location" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Sysselsättning</label>
+                    <InputText class="form-control"
+                               @bind-Value="profile.Occupation" />
+                </div>
+
+                <div class="form-check mb-2">
+                    <InputCheckbox class="form-check-input"
+                                   @bind-Value="profile.ShowAge" />
+                    <label class="form-check-label">
+                        Visa min ålder
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <InputCheckbox class="form-check-input"
+                                   @bind-Value="profile.ShowLocation" />
+                    <label class="form-check-label">
+                        Visa min ort
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <InputCheckbox class="form-check-input"
+                                   @bind-Value="profile.ShowOccupation" />
+                    <label class="form-check-label">
+                        Visa min sysselsättning
+                    </label>
+                </div>
+
+                <button class="btn btn-primary"
+                        @onclick="SaveProfile">
+                    Spara profil
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(message))
+                {
+                    <p class="mt-3">@message</p>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private UpdateProfileDto profile = new();
+    private string? message;
+
+    protected override void OnInitialized()
+    {
+        var user = CurrentUserService.CurrentUser;
+
+        if (user == null)
+        {
+            return;
+        }
+
+        profile = new UpdateProfileDto
+        {
+            Age = user.Age,
+            Location = user.Location,
+            Occupation = user.Occupation,
+            ProfileImageUrl = user.ProfileImageUrl,
+            ShowAge = user.ShowAge,
+            ShowLocation = user.ShowLocation,
+            ShowOccupation = user.ShowOccupation
+        };
+    }
+
+    private async Task SaveProfile()
+    {
+        message = null;
+        // Ladda upp profilbilden om en ny bild har valts.
+        if (selectedProfileImage != null)
+        {
+            try
+            {
+                var uploadedImage =
+                    await ApiService.UploadAsync<UploadedImageDto>(
+                        "api/Images/upload",
+                        selectedProfileImage);
+
+                if (uploadedImage == null)
+                {
+                    message = "Profilbilden kunde inte laddas upp.";
+                    return;
+                }
+
+                profile.ProfileImageUrl =
+                    $"https://localhost:7206/api/Images/{uploadedImage.Id}";
+            }
+            catch (HttpRequestException ex)
+            {
+                message = $"Bilduppladdningen misslyckades: {ex.Message}";
+                return;
+            }
+        }
+        var user = CurrentUserService.CurrentUser;
+
+        if (user == null)
+        {
+            message = "Du måste vara inloggad.";
+            return;
+        }
+        
+        var success = await UsersApiService.UpdateProfileAsync(profile);
+
+        if (!success)
+        {
+            message = "Profilen kunde inte sparas.";
+            return;
+        }
+
+        user.Age = profile.Age;
+        user.Location = profile.Location;
+        user.Occupation = profile.Occupation;
+        user.ProfileImageUrl = profile.ProfileImageUrl;
+        user.ShowAge = profile.ShowAge;
+        user.ShowLocation = profile.ShowLocation;
+        user.ShowOccupation = profile.ShowOccupation;
+
+        CurrentUserService.UpdateUser(user);
+
+        message = "Profilen har sparats!";
+    }
+    private IBrowserFile? selectedProfileImage;
+
+    private void OnProfileImageSelected(InputFileChangeEventArgs e)
+    {
+        selectedProfileImage = e.File;
+    }
+}

@@ -27,35 +27,36 @@ projekt), och exponeras ut som ett API
 ◦ Fler krav kan komma (agilt)
 
 
-Inlämningsuppgift – Public - G
+Inlämningsuppgift – Snackis - G
 
 ◦ Följande funktioner ska finnas:
-◦ Inloggning för admin
-◦ Skapa meny för sajten, samt kunna flytta och radera menyalternativ.
-◦ Skapa sidor (En sida är inte en ny cshtml-fil, utan en växling av innehåll, på samma sida)
-◦ Möjlighet att lägga in innehåll på sidan, I main-delen:
-◦ Rubrik
-◦ Text (Samma utseende på hela texten)
-◦ Bilder
-◦ Länkar
-◦ Enkelt admin för att bestämma hur en rubrik, text, bild, länk ska se ut, via CSS.
-◦ Besöksräknarfunktionalitet, antal besökare per sida.
-◦ Responsiv design, fungera I mobiltelefon
+◦ En admin ska kunna skapa Rubrik på forumet och övergripande ämnen, såsom
+◦ Fordonssnack
+◦ Bilsnack, Båtsnack, Cykelsnack
+◦ Vem som helst ska kunna registrera sig, och kan därefter skapa ett eget inlägg, under en av de
+övergripande ämnena.
+◦ Användaren ska också kunna ladda upp en bild på sig själv, som syns vid sidan om inlägget.
+◦ Vem som helst ska kunna kommentera inläggen, och allt sker I en enda lång tråd. (behöver vara inloggad)
+◦ Varje inlägg ska markeras med Datum och namn på författaren.
+◦ Det ska också gå att skicka privata meddelanden till enskilda personer
+◦ Det ska också finnas en anmälanfunktion, för stötande inlägg, som en admin sedan ska kunna
+granska I en lista.
+◦ Det ska gå att hämta alla inlägg för en diskussion, med författare och datum, via API.
 
+Inlämningsuppgift – Snackis - VG
 
-
-Inlämningsuppgift – Public - VG
-
-◦ G-delen plus:
-◦ Möjlighet att formattera delar av texten, t ex fet stil, olika typsnitt osv
-◦ Möjlighet att kunna lägga till innehåll på flera ställen på sidan (t ex vänsterkolumn, footern)
-◦ Möjlighet att infoga plugins, I eget definierat format, som är helt obundet till Public kodmässigt.
-◦ Exempelvis:
-◦ Visa besöksräknare
-◦ Bildgalleri	(+bilder)
-◦ Väder
-◦ SEO-anpassad URL/URI för sajtens sidor
-◦ Det finns utrymme för egna ideér och funktioner.
+◦ Förutom G-delen:
+◦ Inläggen ska ordnas I en trädliknande struktur, där man kan kommentera enskilda inlägg, som
+blir en sub-diskussion.
+◦ Alternativt så ska ett citat från det tidigare inlägget synas.
+◦ Det ska gå att lägga in bilder I inlägget.
+◦ Det ska gå att skapa gruppmeddelanden, som bara når de som ingår I Gruppen
+◦ Inbjudningsfunktion för Gruppen, samt möjlighet för den som skapade Gruppen att kunna radera
+personer
+◦ Varje registrerad användare ska också kunna ha en enkel info-sida om sig själv.
+◦ Det ska gå att ge inlägget t ex tummen-upp, hjärta m m, och det ska gå att se hur många som
+t ex gillat inlägget.
+◦ Fula ord-filter. Om inlägget innehåller opassande ord, så ska dessa ersättas med *********
 
 
 

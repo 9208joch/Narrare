@@ -17,9 +17,9 @@ public class SiteStyleService : ISiteStyleService
         _siteStyleRepository = siteStyleRepository;
     }
 
-    public async Task<SiteStyle?> GetAsync()
+    public async Task<SiteStyle?> GetAsync(int? pageId = null)
     {
-        return await _siteStyleRepository.GetAsync();
+        return await _siteStyleRepository.GetAsync(pageId);
     }
 
     public async Task<SiteStyle> CreateAsync(

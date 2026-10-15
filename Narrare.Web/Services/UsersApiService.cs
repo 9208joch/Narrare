@@ -34,4 +34,10 @@ public class UsersApiService
             "api/Users/login",
             login);
     }
+    public async Task<bool> UpdateProfileAsync(UpdateProfileDto profile)
+    {
+        return await _apiService.PutWithoutResponseAsync(
+            "api/Users/profile",
+            profile);
+    }
 }

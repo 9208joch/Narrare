@@ -59,14 +59,12 @@ public class SiteStyleController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<SiteStyle>> Get()
+    public async Task<ActionResult<SiteStyle>> Get([FromQuery] int? pageId = null)
     {
-        var style = await _siteStyleService.GetAsync();
+        var style = await _siteStyleService.GetAsync(pageId);
 
         if (style == null)
-        {
             return NotFound();
-        }
 
         return Ok(style);
     }
@@ -80,14 +78,10 @@ public class SiteStyleController : ControllerBase
             return Forbid();
         }
 
-        var existingStyle =
-            await _siteStyleService.GetAsync();
+        var existingStyle = await _siteStyleService.GetAsync(siteStyle.PageId);
 
         if (existingStyle != null)
-        {
-            return Conflict(
-                "En stylingkonfiguration finns redan.");
-        }
+            return Conflict("En stylingkonfiguration finns redan för denna sida.");
 
         var createdStyle =
             await _siteStyleService.CreateAsync(
@@ -95,7 +89,7 @@ public class SiteStyleController : ControllerBase
 
         return Ok(createdStyle);
     }
-
+    
     [HttpPut]
     public async Task<ActionResult<SiteStyle>> Update(
         [FromBody] SiteStyle siteStyle)

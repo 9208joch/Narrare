@@ -18,6 +18,10 @@ public class PostDto
 
     public int UserId { get; set; }
 
+    public string Username { get; set; } = string.Empty;
+
+    public string? ProfileImageUrl { get; set; }
+
     public int CategoryId { get; set; }
     public bool IsDeleted { get; set; }
 

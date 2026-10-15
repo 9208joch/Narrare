@@ -91,7 +91,7 @@
         }
         
         
-
+        
         @if (posts == null)
         {
             <p>Laddar inlägg...</p>
@@ -132,13 +132,19 @@
                         }
                         else
                         {
-                            <h3>
-                                @post.Title
-                            </h3>
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <img src="@(string.IsNullOrWhiteSpace(post.ProfileImageUrl)
+                                                ? "/images/BackUpProfile.png"
+                                                : post.ProfileImageUrl)"
+                                     alt="Profilbild"
+                                     class="rounded-circle"
+                                     style="width: 75px; height: 75px; object-fit: cover;" />
 
-                            <p>
-                                @post.Content
-                            </p>
+                                <strong>@post.Username</strong>
+                            </div>
+                            
+                            <h3>@post.Title</h3>
+                            <p>@post.Content</p>
                             @if (postImages.TryGetValue(post.Id, out var images)
                               && images.Count > 0)
                             {
@@ -216,14 +222,24 @@ else
             }
             else
             {
-                <p class="mb-1">
-                    @comment.Content
-                </p>
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                    <img src="@(string.IsNullOrWhiteSpace(comment.ProfileImageUrl)
+                    ? "/images/BackUpProfile.png"
+                     : comment.ProfileImageUrl)"
+                       alt="Profilbild"
+                       class="rounded-circle"
+                      style="width: 50px; height: 50px; object-fit: cover;" />
 
-                <small class="text-muted">
-                    Skapad:
-                    @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                </small>
+                      <strong>@comment.Username</strong>
+                     </div>
+
+                    <p class="mb-1">@comment.Content</p>
+
+                     <small class="text-muted">
+                   Skapad:
+                     @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                       </small>
+
 
                 @if (CurrentUserService.IsLoggedIn &&
                      (comment.UserId == CurrentUserService.CurrentUser!.Id ||
@@ -641,7 +657,7 @@ else
         {
             return;
         }
-        
+       
         
         if (post.UserId != CurrentUserService.CurrentUser!.Id &&
             CurrentUserService.CurrentUser.Role != Narrare.Domain.Enums.UserRole.Admin)

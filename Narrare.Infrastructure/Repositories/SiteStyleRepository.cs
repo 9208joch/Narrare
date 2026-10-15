@@ -17,10 +17,10 @@ public class SiteStyleRepository : ISiteStyleRepository
         _context = context;
     }
 
-    public async Task<SiteStyle?> GetAsync()
+    public async Task<SiteStyle?> GetAsync(int? pageId = null)
     {
         return await _context.SiteStyles
-            .FirstOrDefaultAsync();
+            .FirstOrDefaultAsync(x => x.PageId == pageId);
     }
 
     public async Task<SiteStyle> CreateAsync(SiteStyle siteStyle)
@@ -35,7 +35,7 @@ public class SiteStyleRepository : ISiteStyleRepository
     public async Task<SiteStyle?> UpdateAsync(SiteStyle siteStyle)
     {
         var existingStyle = await _context.SiteStyles
-            .FirstOrDefaultAsync();
+    .FirstOrDefaultAsync(x => x.Id == siteStyle.Id);
 
         if (existingStyle == null)
         {
@@ -68,7 +68,7 @@ public class SiteStyleRepository : ISiteStyleRepository
 
         existingStyle.ImageMaxWidth =
             siteStyle.ImageMaxWidth;
-
+        
         existingStyle.ImageBorderRadius =
             siteStyle.ImageBorderRadius;
 

@@ -92,6 +92,18 @@ public class ApiService
 
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
+    public async Task<bool> PutWithoutResponseAsync<TRequest>(
+    string url,
+    TRequest data)
+    {
+        var client = _httpClientFactory.CreateClient("NarrareApi");
+
+        AddUserIdHeader(client);
+
+        var response = await client.PutAsJsonAsync(url, data);
+
+        return response.IsSuccessStatusCode;
+    }
 
     public async Task<bool> DeleteAsync(string url)
     {
@@ -133,6 +145,7 @@ public class ApiService
                 $"{response.StatusCode}. " +
                 $"Svar: {error}");
         }
+        
 
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }

@@ -248,7 +248,7 @@ public class NarrareDbContext : DbContext
 
             entity.Property(usage => usage.SortOrder)
                 .IsRequired();
-
+            
             // En bildkoppling måste gälla antingen ett inlägg,
             // en kommentar eller enbart galleriet.
             entity.ToTable(table => table.HasCheckConstraint(

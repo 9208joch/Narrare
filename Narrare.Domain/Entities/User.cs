@@ -19,6 +19,7 @@ public class User
 
     // Profil
     public string? ProfileImageUrl { get; set; }
+    public bool IsProfileComplete { get; set; }
 
     // Användaren bestämmer vad som visas offentligt
     public bool ShowAge { get; set; }
