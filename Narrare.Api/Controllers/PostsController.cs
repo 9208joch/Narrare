@@ -12,15 +12,18 @@ public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
     private readonly IUserService _userService;
+    private readonly ICategoryService _categoryService;
 
     public PostsController(
-        IPostService postService,
-        IUserService userService)
+    IPostService postService,
+    IUserService userService,
+    ICategoryService categoryService)
     {
         _postService = postService;
         _userService = userService;
+        _categoryService = categoryService;
     }
-
+    
     private int? GetCurrentUserId()
     {
         if (!Request.Headers.TryGetValue("X-User-Id", out var userIdValue))
@@ -64,27 +67,39 @@ public class PostsController : ControllerBase
 
         return Ok(result);
     }
+
     [HttpGet]
     public async Task<ActionResult<List<PostDto>>> GetAll()
     {
         var posts = await _postService.GetAllAsync();
+        var result = new List<PostDto>();
 
-        var result = posts.Select(post => new PostDto
+        foreach (var post in posts)
         {
-            Id = post.Id,
-            Title = post.Title,
-            Content = post.Content,
-            CreatedAt = post.CreatedAt,
-            UpdatedAt = post.UpdatedAt,
-            UserId = post.UserId,
-            CategoryId = post.CategoryId,
-            IsDeleted = post.IsDeleted,
-            DeletedByUserId = post.DeletedByUserId,
-            DeletedAt = post.DeletedAt
-        }).ToList();
+            var author = await _userService.GetByIdAsync(post.UserId);
+            var category = await _categoryService.GetByIdAsync(post.CategoryId);
+
+            result.Add(new PostDto
+            {
+                Id = post.Id,
+                Title = post.Title,
+                Content = post.Content,
+                CreatedAt = post.CreatedAt,
+                UpdatedAt = post.UpdatedAt,
+                UserId = post.UserId,
+                Username = author?.Username ?? "Okänd användare",
+                ProfileImageUrl = author?.ProfileImageUrl,
+                CategoryId = post.CategoryId,
+                CategoryName = category?.Name ?? "Okänd kategori",
+                IsDeleted = post.IsDeleted,
+                DeletedByUserId = post.DeletedByUserId,
+                DeletedAt = post.DeletedAt
+            });
+        }
 
         return Ok(result);
     }
+
     [HttpGet("{id}")]
     public async Task<ActionResult<PostDto>> GetById(int id)
     {

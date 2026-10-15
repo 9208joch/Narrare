@@ -1,0 +1,119 @@
+﻿@page "/users/{Id:int}"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject UsersApiService UsersApiService
+@inject PostsApiService PostsApiService
+
+<PageTitle>Användarprofil – Narrare</PageTitle>
+
+<div class="page-container">
+    
+    @if (isLoading)
+    {
+        <p>Laddar profil...</p>
+    }
+    else if (user == null)
+    {
+        <div class="alert alert-warning">
+            Användaren kunde inte hittas.
+        </div>
+    }
+    else
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+
+                <img src="@(string.IsNullOrWhiteSpace(user.ProfileImageUrl)
+                                ? "/images/BackUpProfile.png"
+                                : user.ProfileImageUrl)"
+                     alt="Profilbild"
+                     class="rounded-circle mb-3"
+                     style="width: 150px; height: 150px; object-fit: cover;" />
+
+                <h1>@user.Username</h1>
+
+                @if (user.ShowAge)
+                {
+                    <p><strong>Ålder:</strong> @user.Age</p>
+                }
+
+                @if (user.ShowLocation)
+                {
+                    <p><strong>Ort:</strong> @user.Location</p>
+                }
+
+                @if (user.ShowOccupation &&
+                     !string.IsNullOrWhiteSpace(user.Occupation))
+                {
+                    <p><strong>Sysselsättning:</strong> @user.Occupation</p>
+                }
+
+                <p class="text-muted">
+                    Medlem sedan @user.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                </p>
+
+            </div>
+        </div>
+
+        <h2>Inlägg</h2>
+
+        
+        @if (posts.Count == 0)
+        {
+            <p class="text-muted">Användaren har inte skapat några inlägg ännu.</p>
+        }
+        else
+        {
+            @foreach (var post in posts)
+            {
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <p class="text-muted mb-1">
+                            Kategori: @post.CategoryName
+                        </p>
+
+                        <h3>@post.Title</h3>
+
+                        <p>@post.Content</p>
+
+                        <small class="text-muted">
+                            Skapad:
+                            @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                        </small>
+                    </div>
+                </div>
+            }
+        }
+
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private UserDto? user;
+    private bool isLoading = true;
+    private List<PostDto> posts = new();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        user = await UsersApiService.GetByIdAsync(Id);
+        isLoading = false;
+        posts = new List<PostDto>();
+
+        if (user != null)
+        {
+            var allPosts = await PostsApiService.GetAllAsync();
+
+            posts = allPosts?
+                .Where(post => post.UserId == user.Id && !post.IsDeleted)
+                .OrderByDescending(post => post.CreatedAt)
+                .ToList() ?? new List<PostDto>();
+        }
+    }
+}

@@ -23,6 +23,9 @@ public class PostDto
     public string? ProfileImageUrl { get; set; }
 
     public int CategoryId { get; set; }
+
+    public string CategoryName { get; set; } = string.Empty;
+
     public bool IsDeleted { get; set; }
 
     public int? DeletedByUserId { get; set; }
