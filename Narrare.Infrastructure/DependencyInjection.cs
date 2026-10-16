@@ -26,7 +26,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), 
             typeof(Repository<>));
 
-
+        
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IPostRepository, PostRepository>();
@@ -38,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<IImageUsageRepository, ImageUsageRepository>();
         services.AddScoped<IUploadedImageRepository, UploadedImageRepository>();
         //services.AddScoped<IImageStorageService, ImageStorageService>(); att fixa för testning
+        services.AddScoped<IPrivateMessageRepository, PrivateMessageRepository>();
 
         var imageStorageProvider =
             configuration["ImageStorage:Provider"] ?? "Local";

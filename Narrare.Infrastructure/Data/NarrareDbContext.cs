@@ -24,6 +24,7 @@ public class NarrareDbContext : DbContext
     public DbSet<SiteStyle> SiteStyles { get; set; }
     public DbSet<UploadedImage> UploadedImages => Set<UploadedImage>();
     public DbSet<ImageUsage> ImageUsages => Set<ImageUsage>();
+    public DbSet<PrivateMessage> PrivateMessages => Set<PrivateMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -178,6 +179,35 @@ public class NarrareDbContext : DbContext
                 .HasForeignKey(comment => comment.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
+
+        modelBuilder.Entity<PrivateMessage>(entity =>
+        {
+            entity.HasKey(message => message.Id);
+
+            entity.Property(message => message.Content)
+                .IsRequired()
+                .HasMaxLength(5000);
+
+            entity.Property(message => message.SentAt)
+                .IsRequired();
+
+            entity.Property(message => message.IsRead)
+                .IsRequired();
+
+            entity.HasOne(message => message.Sender)
+                .WithMany()
+                .HasForeignKey(message => message.SenderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(message => message.Receiver)
+                .WithMany()
+                .HasForeignKey(message => message.ReceiverId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(message => message.SenderId);
+            entity.HasIndex(message => message.ReceiverId);
+        });
+
         modelBuilder.Entity<Page>(entity =>
         {
             entity.HasKey(page => page.Id);

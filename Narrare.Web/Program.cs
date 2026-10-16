@@ -28,7 +28,8 @@ namespace Narrare.Web
             builder.Services.AddScoped<SiteStyleApiService>();
             builder.Services.AddScoped<PostImagesApiService>();
             builder.Services.AddScoped<CommentImagesApiService>();
-            
+            builder.Services.AddScoped<PrivateMessagesApiService>();
+
 
             builder.Services.AddScoped<GalleryApiService>(serviceProvider =>
             {

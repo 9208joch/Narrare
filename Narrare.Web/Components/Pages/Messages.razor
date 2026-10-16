@@ -1,0 +1,397 @@
+﻿@page "/messages"
+@page "/messages/{ConversationUserId:int}"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+@using System.Linq
+
+@inject PrivateMessagesApiService PrivateMessagesApiService
+@inject CurrentUserService CurrentUserService
+@inject UsersApiService UsersApiService
+@inject IJSRuntime JS
+
+<PageTitle>Privata meddelanden – Narrare</PageTitle>
+
+<div class="page-container">
+    <h1>Privata meddelanden</h1>
+    
+    @if (CurrentUserService.IsLoggedIn)
+    {
+        <div class="mb-3">
+            
+            @* <button class="btn message-nav-btn me-2 @(!showSent ? "selected" : "")"
+                    @onclick="ShowInbox">
+                Inkorg
+            </button>
+
+            <button class="btn message-nav-btn @(showSent ? "selected" : "")"
+                    @onclick="ShowSent">
+                Skickade
+            </button> *@
+
+        </div>
+    }
+    
+   
+    @if (CurrentUserService.IsLoggedIn)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Nytt privat meddelande</h3>
+
+                <div class="mb-3">
+                    <label class="form-label">Mottagare</label>
+
+                    <select class="form-select" @bind="receiverId">
+                        <option value="0">Välj en användare...</option>
+
+                        @foreach (var user in users)
+                        {
+                            <option value="@user.Id">@user.Username</option>
+                        }
+                    </select>
+                </div>
+
+                <button class="btn btn-secondary mb-3"
+                        disabled="@(receiverId <= 0)"
+                        @onclick="LoadConversation">
+                    Öppna konversation
+                </button>
+
+                <div class="mb-3">
+                    <label class="form-label">Meddelande</label>
+
+                    <textarea class="form-control"
+                              rows="4"
+                              maxlength="5000"
+                              @bind="messageContent">
+                </textarea>
+                </div>
+
+                <button class="btn btn-success"
+                        @onclick="SendMessage">
+                    Skicka meddelande
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(sendMessageStatus))
+                {
+                    <p class="mt-3">@sendMessageStatus</p>
+                }
+            </div>
+        </div>
+
+        <div class="conversation-list">
+            <h3>Konversationer</h3>
+
+            @if (conversations.Count == 0)
+            {
+                <p class="text-muted">Du har inga konversationer ännu.</p>
+            }
+            else
+            {
+                @foreach (var conversation in conversations)
+                {
+                    <button class="conversation-preview"
+                            @onclick="() => OpenConversation(conversation.UserId)">
+
+                        <div class="conversation-preview-header">
+                            <strong>@conversation.Username</strong>
+
+                            
+                            <small>
+                                @(conversation.LastMessageAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))
+                            </small>
+
+                        </div>
+
+                        <p>@conversation.LastMessage</p>
+                    </button>
+                }
+            }
+        </div>
+    }
+    
+    
+
+    @if (!CurrentUserService.IsLoggedIn)
+    {
+        <p>Du måste vara inloggad för att läsa privata meddelanden.</p>
+    }
+    else if (!conversationUserId.HasValue)
+    {
+        <p>Välj en konversation i listan ovan för att öppna chatten.</p>
+    }
+    else if (messages == null)
+    {
+        <p>Laddar inkorgen...</p>
+    }
+    else if (messages.Count == 0)
+    {
+        <p>Din inkorg är tom.</p>
+    }
+    
+    else
+    {
+        <div class="conversation-box">
+            @foreach (var message in messages)
+            {
+                bool isOwnMessage =
+                    message.SenderId == CurrentUserService.CurrentUser!.Id;
+
+                <div class="message-row @(isOwnMessage ? "message-right" : "message-left")">
+                    <div class="chat-bubble @(isOwnMessage ? "chat-own" : "chat-other")">
+                        <strong>
+                            @(isOwnMessage ? "Du" : message.SenderUsername)
+                        </strong>
+
+                        <p class="mb-1">@message.Content</p>
+
+                        <small>
+                            @message.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                        </small>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private List<PrivateMessageDto>? messages;
+    private List<UserDto> users = new();
+    [Parameter]
+    public int? ConversationUserId { get; set; }
+
+    
+    // protected override async Task OnAfterRenderAsync(bool firstRender)   att fixa för testning ta bort?
+    // {
+    //     if (ConversationUserId.HasValue)
+    //     {
+    //         await JS.InvokeVoidAsync("messagesScroll.restore");
+    //     }
+    // }
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        var allUsers = await UsersApiService.GetAllAsync();
+
+        if (allUsers != null && CurrentUserService.CurrentUser != null)
+        {
+            users = allUsers
+                .Where(user => user.Id != CurrentUserService.CurrentUser.Id)
+                .OrderBy(user => user.Username)
+                .ToList();
+        }
+        
+        if (ConversationUserId.HasValue && ConversationUserId.Value > 0)
+        {
+            receiverId = ConversationUserId.Value;
+            conversationUserId = ConversationUserId.Value;
+            messages = await PrivateMessagesApiService.GetConversationAsync(
+                ConversationUserId.Value);
+        }
+        else
+        {
+            conversationUserId = null;
+            messages = await PrivateMessagesApiService.GetInboxAsync();
+        }
+        await LoadConversations();
+    }
+    
+    private bool showSent = false;
+
+    
+    private async Task ShowInbox()
+    {
+        showSent = false;
+
+        if (conversationUserId.HasValue)
+        {
+            messages = await PrivateMessagesApiService.GetConversationAsync(
+                conversationUserId.Value);
+        }
+        else
+        {
+            messages = await PrivateMessagesApiService.GetInboxAsync();
+        }
+    }
+
+    private async Task ShowSent()
+    {
+        showSent = true;
+
+        if (conversationUserId.HasValue)
+        {
+            messages = await PrivateMessagesApiService.GetConversationAsync(
+                conversationUserId.Value);
+        }
+        else
+        {
+            messages = await PrivateMessagesApiService.GetSentAsync();
+        }
+    }
+
+    
+    private int receiverId;
+    private string messageContent = string.Empty;
+    private string sendMessageStatus = string.Empty;
+
+    private async Task SendMessage()
+    {
+        sendMessageStatus = string.Empty;
+
+        if (receiverId <= 0)
+        {
+            sendMessageStatus = "Ange ett giltigt användar-ID.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(messageContent))
+        {
+            sendMessageStatus = "Skriv ett meddelande först.";
+            return;
+        }
+
+        var request = new CreatePrivateMessageDto
+        {
+            ReceiverId = receiverId,
+            Content = messageContent
+        };
+
+        try
+        {
+            var result = await PrivateMessagesApiService.CreateAsync(request);
+
+            if (result == null)
+            {
+                sendMessageStatus = "Meddelandet kunde inte skickas.";
+                return;
+            }
+
+            sendMessageStatus = "Meddelandet skickades!";
+            messageContent = string.Empty;
+
+            conversationUserId = receiverId;
+            showSent = false;
+
+            messages = await PrivateMessagesApiService.GetConversationAsync(
+                receiverId);
+
+            await LoadConversations();
+        }
+        catch (Exception)
+        {
+            sendMessageStatus = "Ett fel uppstod när meddelandet skulle skickas.";
+        }
+    }
+    
+    private int? conversationUserId;
+
+    private async Task LoadConversation()
+    {
+        if (receiverId <= 0)
+        {
+            return;
+        }
+         
+        conversationUserId = receiverId;
+        showSent = false;
+        messages = await PrivateMessagesApiService.GetConversationAsync(
+            receiverId);
+    }
+    
+    private class ConversationPreview
+    {
+        public int UserId { get; set; }
+        public string Username { get; set; } = string.Empty;
+        public string LastMessage { get; set; } = string.Empty;
+        public DateTime LastMessageAt { get; set; }
+    }
+
+    private List<ConversationPreview> conversations = new();
+
+    
+    private async Task LoadConversations()
+    {
+        conversations.Clear();
+
+        var allMessages = new List<PrivateMessageDto>();
+
+        var inbox = await PrivateMessagesApiService.GetInboxAsync();
+        var sent = await PrivateMessagesApiService.GetSentAsync();
+
+        if (inbox != null)
+        {
+            allMessages.AddRange(inbox);
+        }
+
+        if (sent != null)
+        {
+            allMessages.AddRange(sent);
+        }
+
+        var currentUserId = CurrentUserService.CurrentUser?.Id;
+
+        if (currentUserId == null)
+        {
+            return;
+        }
+
+        var groupedMessages = allMessages
+            .GroupBy(message =>
+                message.SenderId == currentUserId.Value
+                    ? message.ReceiverId
+                    : message.SenderId);
+
+        foreach (var group in groupedMessages)
+        {
+            var latestMessage = group
+                .OrderByDescending(message => message.SentAt)
+                .First();
+
+            var otherUser = users.FirstOrDefault(user => user.Id == group.Key);
+
+            if (otherUser != null)
+            {
+                conversations.Add(new ConversationPreview
+                {
+                    UserId = otherUser.Id,
+                    Username = otherUser.Username,
+                    LastMessage = latestMessage.Content,
+                    LastMessageAt = latestMessage.SentAt
+                });
+            }
+        }
+        
+        conversations = conversations
+            .OrderByDescending(conversation => conversation.LastMessageAt)
+            .ToList();
+    }
+    
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private async Task OpenConversation(int userId)
+    {
+        receiverId = userId;
+        conversationUserId = userId;
+        showSent = false;
+
+        messages = await PrivateMessagesApiService.GetConversationAsync(userId);
+
+        await LoadConversations();
+    }
+
+
+
+
+    
+
+}
