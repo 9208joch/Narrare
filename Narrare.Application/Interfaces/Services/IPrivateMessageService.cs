@@ -1,7 +1,8 @@
-﻿using System;
+﻿using Narrare.Application.DTOs;
+using Narrare.Domain.Entities;
+using System;
 using System.Collections.Generic;
 using System.Text;
-using Narrare.Application.DTOs;
 
 namespace Narrare.Application.Interfaces.Services;
 
@@ -20,4 +21,16 @@ public interface IPrivateMessageService
     Task<List<PrivateMessageDto>> GetConversationAsync(
     int userId,
     int otherUserId);
+    Task<List<PrivateMessageDto>> GetByConversationIdAsync(
+    int conversationId);
+    Task<PrivateMessageDto> CreateGroupMessageAsync(
+    int senderId,
+    int conversationId,
+    string content);
+    Task<List<GroupMessageReadStatus>> GetGroupReadStatusesAsync(
+    int userId);
+
+    Task MarkGroupConversationAsReadAsync(
+        int conversationId,
+        int userId);
 }

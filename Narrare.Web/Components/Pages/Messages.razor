@@ -4,72 +4,154 @@
 @using Narrare.Application.DTOs
 @using Narrare.Web.Services
 @using System.Linq
+@using Narrare.Domain.Entities
 
 @inject PrivateMessagesApiService PrivateMessagesApiService
 @inject CurrentUserService CurrentUserService
 @inject UsersApiService UsersApiService
+@inject ConversationsApiService ConversationsApiService
 @inject IJSRuntime JS
+@inject UnreadMessagesService UnreadMessagesService
+
 
 <PageTitle>Privata meddelanden – Narrare</PageTitle>
 
+
+
+
 <div class="page-container">
-    <h1>Privata meddelanden</h1>
-    
-    @if (CurrentUserService.IsLoggedIn)
-    {
-        <div class="mb-3">
-            
-            @* <button class="btn message-nav-btn me-2 @(!showSent ? "selected" : "")"
-                    @onclick="ShowInbox">
-                Inkorg
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h1 class="mb-0">
+            @if (selectedGroupConversationId.HasValue)
+            {
+                var selectedGroup = groupConversations.FirstOrDefault(
+                    group => group.Id == selectedGroupConversationId.Value);
+
+                @(selectedGroup?.Name ?? "Gruppchatt")
+            }
+            else
+            {
+                @:Privata meddelanden
+            }
+        </h1>
+
+        @if (selectedGroupConversationId.HasValue)
+        {
+            <button class="btn btn-outline-dark"
+                    @onclick="OpenRenameDialog">
+                Byt namn
             </button>
+        }
+    </div>
+    
+    
+    @if (showRenameDialog)
+    {
+        <div class="modal d-block" tabindex="-1" role="dialog"
+             style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Byt namn på gruppchatten</h5>
 
-            <button class="btn message-nav-btn @(showSent ? "selected" : "")"
-                    @onclick="ShowSent">
-                Skickade
-            </button> *@
+                        <button type="button"
+                                class="btn-close"
+                                aria-label="Stäng"
+                                @onclick="() => showRenameDialog = false">
+                        </button>
+                    </div>
 
+                    <div class="modal-body">
+                        <label class="form-label">Gruppnamn</label>
+
+                        <input class="form-control"
+                               @bind="renameGroupName"
+                               maxlength="100" />
+
+                        @if (!string.IsNullOrWhiteSpace(renameGroupStatus))
+                        {
+                            <p class="text-danger mt-2">@renameGroupStatus</p>
+                        }
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary"
+                                @onclick="() => showRenameDialog = false">
+                            Avbryt
+                        </button>
+
+                        <button class="btn btn-primary"
+                                @onclick="SaveGroupName">
+                            Spara
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     }
     
-   
-    @if (CurrentUserService.IsLoggedIn)
+    @* 1. Knappar *@
+    <div class="mb-4 d-flex gap-2 flex-wrap">
+        <button class="btn btn-primary"
+                @onclick="() => showNewPrivateMessage = !showNewPrivateMessage">
+            @(showNewPrivateMessage ? "Dölj privat meddelande" : "Nytt privat meddelande")
+        </button>
+
+        <button class="btn btn-success"
+                @onclick="() => showCreateGroup = !showCreateGroup">
+            @(showCreateGroup ? "Dölj gruppchatt" : "Skapa gruppchatt")
+        </button>
+    </div>
+
+    @* 2. Nytt privat meddelande *@
+    @if (CurrentUserService.IsLoggedIn
+        && !selectedGroupConversationId.HasValue
+        && showNewPrivateMessage)
     {
         <div class="card mb-4">
             <div class="card-body">
                 <h3>Nytt privat meddelande</h3>
 
-                <div class="mb-3">
-                    <label class="form-label">Mottagare</label>
+                <label class="form-label">Till</label>
+                <div class="form-control d-flex flex-wrap gap-2 align-items-center mb-3"
+                     style="min-height:45px;height:auto;">
+                    @foreach (var userId in selectedRecipientIds)
+                    {
+                        var selectedUser = users.FirstOrDefault(u => u.Id == userId);
+                        if (selectedUser != null)
+                        {
+                            <span class="badge bg-secondary d-inline-flex align-items-center gap-2 p-2">
+                                @selectedUser.Username
+                                <button type="button"
+                                        class="btn-close btn-close-white"
+                                        aria-label="Ta bort mottagare"
+                                        @onclick="() => ToggleRecipient(userId, false)">
+                                </button>
+                            </span>
+                        }
+                    }
 
-                    <select class="form-select" @bind="receiverId">
-                        <option value="0">Välj en användare...</option>
-
-                        @foreach (var user in users)
+                    <select class="form-select border-0"
+                            style="width:auto;min-width:200px;flex:1;"
+                            value="0"
+                            @onchange="AddRecipient">
+                        <option value="0">Välj mottagare...</option>
+                        @foreach (var user in users.Where(u => !selectedRecipientIds.Contains(u.Id)))
                         {
                             <option value="@user.Id">@user.Username</option>
                         }
                     </select>
                 </div>
 
-                <button class="btn btn-secondary mb-3"
-                        disabled="@(receiverId <= 0)"
-                        @onclick="LoadConversation">
-                    Öppna konversation
-                </button>
-
                 <div class="mb-3">
                     <label class="form-label">Meddelande</label>
-
                     <textarea class="form-control"
                               rows="4"
                               maxlength="5000"
-                              @bind="messageContent">
-                </textarea>
+                              @bind="messageContent"></textarea>
                 </div>
 
-                <button class="btn btn-success"
-                        @onclick="SendMessage">
+                <button class="btn btn-success" @onclick="SendMessage">
                     Skicka meddelande
                 </button>
 
@@ -79,88 +161,282 @@
                 }
             </div>
         </div>
+    }
 
-        <div class="conversation-list">
-            <h3>Konversationer</h3>
+    @* 3. Skapa gruppchatt *@
+    @if (CurrentUserService.IsLoggedIn && showCreateGroup)
+    {
+        <div class="card mb-4">
+            <div class="card-body">
+                <h3>Skapa gruppchatt</h3>
 
-            @if (conversations.Count == 0)
+                <div class="mb-3">
+                    <label class="form-label">Gruppnamn</label>
+                    <input class="form-control"
+                           @bind="groupName"
+                           maxlength="100"
+                           placeholder="Ange ett namn på gruppen" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Deltagare</label>
+                    <div class="form-control d-flex flex-wrap gap-2 align-items-center"
+                         style="min-height:45px;height:auto;">
+                        @foreach (var userId in selectedGroupParticipantIds)
+                        {
+                            var selectedUser = users.FirstOrDefault(u => u.Id == userId);
+                            if (selectedUser != null)
+                            {
+                                <span class="badge bg-secondary d-inline-flex align-items-center gap-2 p-2">
+                                    @selectedUser.Username
+                                    <button type="button"
+                                            class="btn-close btn-close-white"
+                                            aria-label="Ta bort deltagare"
+                                            @onclick="() => ToggleGroupParticipant(userId, false)">
+                                    </button>
+                                </span>
+                            }
+                        }
+
+                        <select class="form-select border-0"
+                                style="width:auto;min-width:200px;flex:1;"
+                                value="0"
+                                @onchange="AddGroupParticipant">
+                            <option value="0">Välj deltagare...</option>
+                            @foreach (var user in users.Where(u => !selectedGroupParticipantIds.Contains(u.Id)))
+                            {
+                                <option value="@user.Id">@user.Username</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" @onclick="CreateGroup">
+                    Skapa grupp
+                </button>
+
+                @if (!string.IsNullOrWhiteSpace(groupStatus))
+                {
+                    <p class="mt-3">@groupStatus</p>
+                }
+            </div>
+        </div>
+    }
+
+    @* 4. Befintlig chatt *@
+    @if (!CurrentUserService.IsLoggedIn)
+    {
+        <p>Du måste vara inloggad för att läsa meddelanden.</p>
+    }
+    else if (conversationUserId.HasValue || selectedGroupConversationId.HasValue)
+    {
+        @if (messages == null)
+        {
+            <p>Laddar meddelanden...</p>
+        }
+        else
+        {
+            @if (messages.Count == 0)
             {
-                <p class="text-muted">Du har inga konversationer ännu.</p>
+                <p class="text-muted">Inga meddelanden i den här konversationen ännu.</p>
             }
             else
             {
-                @foreach (var conversation in conversations)
-                {
-                    <button class="conversation-preview"
-                            @onclick="() => OpenConversation(conversation.UserId)">
+                <div class="conversation-box">
+                    @foreach (var message in messages)
+                    {
+                        bool isOwnMessage =
+                            message.SenderId == CurrentUserService.CurrentUser!.Id;
 
-                        <div class="conversation-preview-header">
-                            <strong>@conversation.Username</strong>
-
-                            
-                            <small>
-                                @(conversation.LastMessageAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))
-                            </small>
-
+                        <div class="message-row @(isOwnMessage ? "message-right" : "message-left")">
+                            <div class="chat-bubble @(isOwnMessage ? "chat-own" : "chat-other")">
+                                <strong>@(isOwnMessage ? "Du" : message.SenderUsername)</strong>
+                                <p class="mb-1">@message.Content</p>
+                                <small>@message.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</small>
+                            </div>
                         </div>
-
-                        <p>@conversation.LastMessage</p>
-                    </button>
-                }
+                    }
+                </div>
             }
-        </div>
-    }
-    
-    
 
-    @if (!CurrentUserService.IsLoggedIn)
-    {
-        <p>Du måste vara inloggad för att läsa privata meddelanden.</p>
-    }
-    else if (!conversationUserId.HasValue)
-    {
-        <p>Välj en konversation i listan ovan för att öppna chatten.</p>
-    }
-    else if (messages == null)
-    {
-        <p>Laddar inkorgen...</p>
-    }
-    else if (messages.Count == 0)
-    {
-        <p>Din inkorg är tom.</p>
-    }
-    
-    else
-    {
-        <div class="conversation-box">
-            @foreach (var message in messages)
+            @* 5a. Skrivyta för privat konversation *@
+            @if (conversationUserId.HasValue && !selectedGroupConversationId.HasValue)
             {
-                bool isOwnMessage =
-                    message.SenderId == CurrentUserService.CurrentUser!.Id;
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4>Svara i konversationen</h4>
+                        <textarea class="form-control mb-3"
+                                  rows="3"
+                                  maxlength="5000"
+                                  @bind="replyContent"
+                                  placeholder="Skriv ditt svar..."></textarea>
+                        <button class="btn btn-success" @onclick="SendReply">
+                            Skicka svar
+                        </button>
 
-                <div class="message-row @(isOwnMessage ? "message-right" : "message-left")">
-                    <div class="chat-bubble @(isOwnMessage ? "chat-own" : "chat-other")">
-                        <strong>
-                            @(isOwnMessage ? "Du" : message.SenderUsername)
-                        </strong>
-
-                        <p class="mb-1">@message.Content</p>
-
-                        <small>
-                            @message.SentAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-                        </small>
+                        @if (!string.IsNullOrWhiteSpace(replyStatus))
+                        {
+                            <p class="mt-2">@replyStatus</p>
+                        }
                     </div>
                 </div>
             }
-        </div>
+            
+            @* Bjud in deltagare till befintlig gruppchatt *@
+            @if (selectedGroupConversationId.HasValue)
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4>Bjud in deltagare</h4>
+
+                        <label class="form-label">Välj deltagare</label>
+
+                        <div class="form-control d-flex flex-wrap gap-2 align-items-center mb-3"
+                             style="min-height:45px;height:auto;">
+
+                            @foreach (var userId in selectedInviteParticipantIds)
+                            {
+                                var selectedUser = users.FirstOrDefault(u => u.Id == userId);
+
+                                if (selectedUser != null)
+                                {
+                                    <span class="badge bg-secondary d-inline-flex align-items-center gap-2 p-2">
+                                        @selectedUser.Username
+
+                                        <button type="button"
+                                                class="btn-close btn-close-white"
+                                                aria-label="Ta bort deltagare"
+                                                @onclick="() => ToggleInviteParticipant(userId, false)">
+                                        </button>
+                                    </span>
+                                }
+                            }
+
+                            <select class="form-select border-0"
+                                    style="width:auto;min-width:200px;flex:1;"
+                                    value="0"
+                                    @onchange="AddInviteParticipant">
+                                <option value="0">Välj deltagare...</option>
+
+                                @foreach (var user in users.Where(
+                                    u => !selectedInviteParticipantIds.Contains(u.Id)
+                                    && !GetSelectedGroupMemberIds().Contains(u.Id)))
+                                {
+                                    <option value="@user.Id">@user.Username</option>
+                                }
+                            </select>
+                        </div>
+
+                        <button class="btn btn-primary" @onclick="InviteParticipants">
+                            Bjud in valda deltagare
+                        </button>
+
+                        @if (!string.IsNullOrWhiteSpace(inviteStatus))
+                        {
+                            <p class="mt-3">@inviteStatus</p>
+                        }
+                    </div>
+                </div>
+            }
+
+            @* 5b. Skrivyta för gruppchatt *@
+            @if (selectedGroupConversationId.HasValue)
+            {
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4>Skicka gruppmeddelande</h4>
+                        <textarea class="form-control mb-3"
+                                  rows="3"
+                                  maxlength="5000"
+                                  @bind="groupMessageContent"
+                                  placeholder="Skriv ditt meddelande..."></textarea>
+                        <button class="btn btn-success" @onclick="SendGroupMessage">
+                            Skicka till gruppen
+                        </button>
+
+                        @if (!string.IsNullOrWhiteSpace(groupMessageStatus))
+                        {
+                            <p class="mt-2">@groupMessageStatus</p>
+                        }
+                    </div>
+                </div>
+            }
+        }
     }
+    else
+    {
+        <p>Välj en konversation i listan nedan för att öppna chatten.</p>
+    }
+
+    @* 6. Privata konversationer *@
+    <div class="conversation-list">
+        <h3>Privata konversationer</h3>
+
+        @if (conversations.Count == 0)
+        {
+            <p class="text-muted">Du har inga privata konversationer ännu.</p>
+        }
+        else
+        {
+            @foreach (var conversation in conversations)
+            {
+                
+                <button class="conversation-preview"
+                        style="background-color: @(unreadSenderIds.Contains(conversation.UserId) ? "#96F90F" : "white");"
+                        @onclick="() => OpenConversation(conversation.UserId)">
+
+                    <div class="conversation-preview-header">
+                        <strong>@conversation.Username</strong>
+                        <small>@conversation.LastMessageAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</small>
+                    </div>
+                    <p>@conversation.LastMessage</p>
+                </button>
+            }
+        }
+    </div>
+    
+    @* 7. Gruppchattar *@
+    <div class="conversation-list mt-4">
+        <h3>Gruppchattar</h3>
+
+        @if (groupConversations.Count == 0)
+        {
+            <p class="text-muted">Du är inte medlem i någon gruppchatt ännu.</p>
+        }
+        else
+        {
+            
+            @foreach (var group in groupConversations)
+            {
+                <button class="conversation-preview"
+                        style="background-color: @(unreadGroupConversationIds.Contains(group.Id) ? "#96F90F" : "white");"
+                        @onclick="() => OpenGroupConversation(group.Id)">
+                    <div class="conversation-preview-header">
+                        <strong>@group.Name</strong>
+                        <small>@group.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</small>
+                    </div>
+
+                    @if (group.MemberUsernames.Count > 0)
+                    {
+                        <p class="text-muted mb-0 mt-2">
+                            Medlemmar: @string.Join(", ", group.MemberUsernames)
+                        </p>
+                    }
+                </button>
+            }
+        }
+    </div>
 </div>
+
+
+
 
 @code {
     private List<PrivateMessageDto>? messages;
     private List<UserDto> users = new();
     [Parameter]
     public int? ConversationUserId { get; set; }
+
 
     
     // protected override async Task OnAfterRenderAsync(bool firstRender)   att fixa för testning ta bort?
@@ -170,8 +446,76 @@
     //         await JS.InvokeVoidAsync("messagesScroll.restore");
     //     }
     // }
+    private bool showNewPrivateMessage = false;
+    private bool showCreateGroup = false;
+    private HashSet<int> selectedRecipientIds = new();
+    private void AddRecipient(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int userId)
+            && userId > 0)
+        {
+            selectedRecipientIds.Add(userId);
+        }
+    }
+    private HashSet<int> selectedGroupParticipantIds = new();
     
+    private HashSet<int> selectedInviteParticipantIds = new();
 
+    private string inviteStatus = string.Empty;
+
+    private void AddInviteParticipant(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int userId)
+            && userId > 0)
+        {
+            selectedInviteParticipantIds.Add(userId);
+        }
+    }
+
+    private void ToggleInviteParticipant(int userId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            selectedInviteParticipantIds.Add(userId);
+        }
+        else
+        {
+            selectedInviteParticipantIds.Remove(userId);
+        }
+    }
+
+    private HashSet<int> GetSelectedGroupMemberIds()
+    {
+        if (!selectedGroupConversationId.HasValue)
+        {
+            return new HashSet<int>();
+        }
+
+        var selectedGroup = groupConversations.FirstOrDefault(
+            group => group.Id == selectedGroupConversationId.Value);
+
+        if (selectedGroup?.MemberUsernames == null)
+        {
+            return new HashSet<int>();
+        }
+
+        return users
+            .Where(user => selectedGroup.MemberUsernames.Contains(user.Username))
+            .Select(user => user.Id)
+            .ToHashSet();
+    }
+
+    private void ToggleRecipient(int userId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            selectedRecipientIds.Add(userId);
+        }
+        else
+        {
+            selectedRecipientIds.Remove(userId);
+        }
+    }
     protected override async Task OnInitializedAsync()
     {
         if (!CurrentUserService.IsLoggedIn)
@@ -246,9 +590,9 @@
     {
         sendMessageStatus = string.Empty;
 
-        if (receiverId <= 0)
+        if (selectedRecipientIds.Count == 0)
         {
-            sendMessageStatus = "Ange ett giltigt användar-ID.";
+            sendMessageStatus = "Välj minst en mottagare.";
             return;
         }
 
@@ -257,31 +601,30 @@
             sendMessageStatus = "Skriv ett meddelande först.";
             return;
         }
-
-        var request = new CreatePrivateMessageDto
+        
+        try 
         {
-            ReceiverId = receiverId,
-            Content = messageContent
-        };
-
-        try
-        {
-            var result = await PrivateMessagesApiService.CreateAsync(request);
-
-            if (result == null)
+            foreach (var recipientId in selectedRecipientIds)
             {
-                sendMessageStatus = "Meddelandet kunde inte skickas.";
-                return;
+                var request = new CreatePrivateMessageDto
+                {
+                    ReceiverId = recipientId,
+                    Content = messageContent
+                };
+
+                var result = await PrivateMessagesApiService.CreateAsync(request);
+
+                if (result == null)
+                {
+                    sendMessageStatus =
+                        "Alla meddelanden kunde inte skickas. Kontrollera resultatet innan du försöker igen.";
+                    return;
+                }
             }
 
-            sendMessageStatus = "Meddelandet skickades!";
+            sendMessageStatus = "Meddelandet skickades till alla valda mottagare!";
             messageContent = string.Empty;
-
-            conversationUserId = receiverId;
-            showSent = false;
-
-            messages = await PrivateMessagesApiService.GetConversationAsync(
-                receiverId);
+            selectedRecipientIds.Clear();
 
             await LoadConversations();
         }
@@ -291,7 +634,62 @@
         }
     }
     
+    private string replyContent = string.Empty;
+    private string replyStatus = string.Empty;
+
+    private async Task SendReply()
+    {
+        replyStatus = string.Empty;
+
+        // Kontrollera att en privat konversation är öppen.
+        if (!conversationUserId.HasValue || conversationUserId.Value <= 0)
+        {
+            replyStatus = "Välj en privat konversation först.";
+            return;
+        }
+
+        // Kontrollera att meddelandet innehåller text.
+        if (string.IsNullOrWhiteSpace(replyContent))
+        {
+            replyStatus = "Skriv ett meddelande först.";
+            return;
+        }
+
+        try
+        {
+            var request = new CreatePrivateMessageDto
+            {
+                ReceiverId = conversationUserId.Value,
+                Content = replyContent.Trim()
+            };
+
+            var result = await PrivateMessagesApiService.CreateAsync(request);
+
+            if (result == null)
+            {
+                replyStatus = "Meddelandet kunde inte skickas.";
+                return;
+            }
+
+            replyContent = string.Empty;
+
+            // Hämta konversationen igen så att det nya meddelandet visas.
+            messages = await PrivateMessagesApiService.GetConversationAsync(
+                conversationUserId.Value);
+
+            await LoadConversations();
+
+            replyStatus = "Meddelandet skickades!";
+        }
+        catch (Exception)
+        {
+            replyStatus = "Ett fel uppstod när meddelandet skulle skickas.";
+        }
+    }
+
+    
     private int? conversationUserId;
+    private int? selectedGroupConversationId;
 
     private async Task LoadConversation()
     {
@@ -313,8 +711,27 @@
         public string LastMessage { get; set; } = string.Empty;
         public DateTime LastMessageAt { get; set; }
     }
-
+    
     private List<ConversationPreview> conversations = new();
+    private List<ConversationDto> groupConversations = new();
+    private HashSet<int> unreadSenderIds = new();
+    private HashSet<int> unreadGroupConversationIds = new();
+    
+    
+    private bool HasUnreadMessages(int otherUserId)
+    {
+        var currentUserId = CurrentUserService.CurrentUser?.Id;
+
+        if (currentUserId == null || messages == null)
+        {
+            return false;
+        }
+
+        return messages.Any(message =>
+            message.ReceiverId == currentUserId.Value
+            && message.SenderId == otherUserId
+            && !message.IsRead);
+    }
 
     
     private async Task LoadConversations()
@@ -323,9 +740,24 @@
 
         var allMessages = new List<PrivateMessageDto>();
 
+        // Hämta den inloggade användarens ID.
+        var currentUserId = CurrentUserService.CurrentUser?.Id;
+
+        // Om ingen användare är inloggad finns inget att ladda.
+        if (currentUserId == null)
+        {
+            unreadSenderIds.Clear();
+            UnreadMessagesService.SetUnreadPrivateConversationCount(0);
+            return;
+        }
+
+        // Hämta mottagna meddelanden.
         var inbox = await PrivateMessagesApiService.GetInboxAsync();
+
+        // Hämta skickade meddelanden.
         var sent = await PrivateMessagesApiService.GetSentAsync();
 
+        // Samla alla mottagna och skickade meddelanden.
         if (inbox != null)
         {
             allMessages.AddRange(inbox);
@@ -336,13 +768,22 @@
             allMessages.AddRange(sent);
         }
 
-        var currentUserId = CurrentUserService.CurrentUser?.Id;
+        // Identifiera unika privata konversationer med olästa
+        // meddelanden som faktiskt är mottagna av aktuell användare.
+        unreadSenderIds = (inbox ?? new List<PrivateMessageDto>())
+            .Where(message =>
+                !message.IsRead &&
+                message.ReceiverId == currentUserId.Value &&
+                message.SenderId != currentUserId.Value)
+            .Select(message => message.SenderId)
+            .ToHashSet();
 
-        if (currentUserId == null)
-        {
-            return;
-        }
+        // Uppdatera räknaren i navbaren.
+        UnreadMessagesService.SetUnreadPrivateConversationCount(
+            unreadSenderIds.Count);
 
+        // Gruppera meddelanden efter den andra användaren
+        // i respektive privat konversation.
         var groupedMessages = allMessages
             .GroupBy(message =>
                 message.SenderId == currentUserId.Value
@@ -351,11 +792,14 @@
 
         foreach (var group in groupedMessages)
         {
+            // Hitta det senaste meddelandet i konversationen.
             var latestMessage = group
                 .OrderByDescending(message => message.SentAt)
                 .First();
 
-            var otherUser = users.FirstOrDefault(user => user.Id == group.Key);
+            // Hitta användaren som konversationen gäller.
+            var otherUser = users.FirstOrDefault(
+                user => user.Id == group.Key);
 
             if (otherUser != null)
             {
@@ -368,30 +812,315 @@
                 });
             }
         }
-        
+
+        // Visa de senaste konversationerna först.
         conversations = conversations
             .OrderByDescending(conversation => conversation.LastMessageAt)
             .ToList();
+
+        // Hämta gruppkonversationerna.
+        
+        groupConversations =
+            await ConversationsApiService.GetMyConversationsAsync()
+            ?? new List<ConversationDto>();
+        
+        var groupReadStatuses =
+    await PrivateMessagesApiService.GetGroupReadStatusesAsync()
+    ?? new List<GroupMessageReadStatus>();
+
+        unreadGroupConversationIds = groupReadStatuses
+            .Where(status =>
+                !status.IsRead &&
+                status.Message?.ConversationId != null)
+            .Select(status => status.Message!.ConversationId!.Value)
+            .Where(conversationId =>
+                groupConversations.Any(group => group.Id == conversationId))
+            .ToHashSet();
+
+        UnreadMessagesService.SetUnreadGroupConversationCount(
+            unreadGroupConversationIds.Count);
+
     }
     
+
 
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
+    
     private async Task OpenConversation(int userId)
     {
+        selectedGroupConversationId = null;
+
         receiverId = userId;
         conversationUserId = userId;
         showSent = false;
 
         messages = await PrivateMessagesApiService.GetConversationAsync(userId);
 
+        if (messages != null && CurrentUserService.CurrentUser != null)
+        {
+            var currentUserId = CurrentUserService.CurrentUser.Id;
+
+            foreach (var message in messages.Where(message =>
+                message.ReceiverId == currentUserId && !message.IsRead))
+            {
+                await PrivateMessagesApiService.MarkAsReadAsync(message.Id);
+            }
+        }
+
         await LoadConversations();
     }
 
+    
+    private string groupName = string.Empty;
+    private string groupStatus = string.Empty;
+    
 
+    private void ToggleGroupParticipant(int userId, bool isSelected)
+    {
+        if (isSelected)
+        {
+            selectedGroupParticipantIds.Add(userId);
+        }
+        else
+        {
+            selectedGroupParticipantIds.Remove(userId);
+        }
+    }
+
+    private async Task CreateGroup()
+    {
+        groupStatus = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(groupName))
+        {
+            groupStatus = "Ange ett namn på gruppen.";
+            return;
+        }
+
+        if (selectedGroupParticipantIds.Count == 0)
+        {
+            groupStatus = "Välj minst en annan deltagare.";
+            return;
+        }
+
+        try
+        {
+            var request = new CreateGroupConversationDto
+            {
+                Name = groupName.Trim(),
+                ParticipantIds = selectedGroupParticipantIds.ToList()
+            };
+
+            var result = await ConversationsApiService.CreateGroupAsync(request);
+
+            if (result == null)
+            {
+                groupStatus = "Gruppen kunde inte skapas.";
+                return;
+            }
+            
+            groupStatus = $"Gruppen '{result.Name}' skapades.";
+
+            groupName = string.Empty;
+            selectedGroupParticipantIds.Clear();
+            await LoadConversations();
+        }
+        catch (Exception)
+        {
+            groupStatus = "Ett fel uppstod när gruppen skulle skapas.";
+        }
+    }
+    
+    
+    private async Task OpenGroupConversation(int conversationId)
+    {
+        selectedGroupConversationId = conversationId;
+        conversationUserId = null;
+        receiverId = 0;
+        showSent = false;
+        showNewPrivateMessage = false;
+        showCreateGroup = false;
+
+        // Hämta gruppens meddelanden.
+        messages = await PrivateMessagesApiService.GetByConversationIdAsync(
+            conversationId);
+
+        // Markera gruppens meddelanden som lästa för den inloggade användaren.
+        await PrivateMessagesApiService.MarkGroupConversationAsReadAsync(
+            conversationId);
+
+        // Uppdatera lässtatusarna efteråt.
+        await PrivateMessagesApiService.GetGroupReadStatusesAsync();
+        await LoadConversations();
+    }
+
+    
+    private string groupMessageContent = string.Empty;
+    private string groupMessageStatus = string.Empty;
+
+    
+    private async Task SendGroupMessage()
+    {
+        groupMessageStatus = string.Empty;
+
+        if (!selectedGroupConversationId.HasValue)
+        {
+            groupMessageStatus = "Välj en grupp först.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(groupMessageContent))
+        {
+            groupMessageStatus = "Skriv ett meddelande först.";
+            return;
+        }
+
+        try
+        {
+            var request = new CreateGroupMessageDto
+            {
+                ConversationId = selectedGroupConversationId.Value,
+                Content = groupMessageContent.Trim()
+            };
+
+            var result = await PrivateMessagesApiService
+                .CreateGroupMessageAsync(request);
+
+            if (result == null)
+            {
+                groupMessageStatus = "Meddelandet kunde inte skickas.";
+                return;
+            }
+            
+            groupMessageContent = string.Empty;
+
+            messages = await PrivateMessagesApiService
+                .GetByConversationIdAsync(
+                    selectedGroupConversationId.Value);
+
+            groupMessageStatus = "Meddelandet skickades!";
+        }
+        catch (Exception)
+        {
+            groupMessageStatus = "Ett fel uppstod när meddelandet skulle skickas.";
+        }
+    }
+    
+    private void AddGroupParticipant(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int userId)
+            && userId > 0)
+        {
+            selectedGroupParticipantIds.Add(userId);
+        }
+    }
+    
+    
+    private async Task InviteParticipants()
+    {
+        inviteStatus = string.Empty;
+
+        if (!selectedGroupConversationId.HasValue)
+        {
+            inviteStatus = "Välj en gruppchatt först.";
+            return;
+        }
+
+        if (selectedInviteParticipantIds.Count == 0)
+        {
+            inviteStatus = "Välj minst en deltagare att bjuda in.";
+            return;
+        }
+
+        try
+        {
+            var success = await ConversationsApiService.AddParticipantsAsync(
+                selectedGroupConversationId.Value,
+                selectedInviteParticipantIds.ToList());
+
+            if (!success)
+            {
+                inviteStatus = "Deltagarna kunde inte bjudas in.";
+                return;
+            }
+
+            selectedInviteParticipantIds.Clear();
+
+            await LoadConversations();
+
+            inviteStatus = "Deltagarna har bjudits in!";
+        }
+        catch (Exception)
+        {
+            inviteStatus = "Ett fel uppstod när deltagarna skulle bjudas in.";
+        }
+    }
+    
+    private bool showRenameDialog = false;
+    private string renameGroupName = string.Empty;
+    private string renameGroupStatus = string.Empty;
+
+    private void OpenRenameDialog()
+    {
+        var selectedGroup = groupConversations.FirstOrDefault(
+            group => group.Id == selectedGroupConversationId);
+
+        if (selectedGroup == null)
+        {
+            return;
+        }
+
+        renameGroupName = selectedGroup.Name;
+        renameGroupStatus = string.Empty;
+        showRenameDialog = true;
+    }
 
 
     
+    private async Task SaveGroupName()
+    {
+        renameGroupStatus = string.Empty;
 
+        if (!selectedGroupConversationId.HasValue)
+        {
+            renameGroupStatus = "Ingen gruppchatt är vald.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(renameGroupName))
+        {
+            renameGroupStatus = "Ange ett gruppnamn.";
+            return;
+        }
+
+        try
+        {
+            var request = new RenameConversationDto
+            {
+                Name = renameGroupName.Trim()
+            };
+            
+            var success = await ConversationsApiService.RenameAsync(
+                selectedGroupConversationId.Value,
+                request);
+
+            if (!success)
+            {
+                renameGroupStatus = "Gruppnamnet kunde inte ändras.";
+                return;
+            }
+            
+            await LoadConversations();
+            
+            showRenameDialog = false;
+        }
+        catch (Exception)
+        {
+            renameGroupStatus = "Ett fel uppstod när gruppnamnet skulle ändras.";
+        }
+    }
+    
+    
 }

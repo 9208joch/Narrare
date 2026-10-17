@@ -66,5 +66,13 @@ public class PrivateMessageRepository : IPrivateMessageRepository
             .OrderBy(message => message.SentAt)
             .ToListAsync();
     }
+    public async Task<List<PrivateMessage>> GetByConversationIdAsync(
+    int conversationId)
+    {
+        return await _context.PrivateMessages
+            .Where(message => message.ConversationId == conversationId)
+            .OrderBy(message => message.SentAt)
+            .ToListAsync();
+    }
 
 }

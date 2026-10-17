@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 using Narrare.Application.DTOs;
 using Narrare.Application.Interfaces.Repositories;
 using Narrare.Application.Interfaces.Services;
@@ -12,13 +13,19 @@ public class PrivateMessageService : IPrivateMessageService
 {
     private readonly IPrivateMessageRepository _repository;
     private readonly IUserRepository _userRepository;
+    private readonly IConversationRepository _conversationRepository;
+    private readonly IGroupMessageReadStatusRepository _groupMessageReadStatusRepository;
     
     public PrivateMessageService(
-        IPrivateMessageRepository repository,
-        IUserRepository userRepository)
+    IPrivateMessageRepository repository,
+    IUserRepository userRepository,
+    IConversationRepository conversationRepository,
+    IGroupMessageReadStatusRepository groupMessageReadStatusRepository)
     {
         _repository = repository;
         _userRepository = userRepository;
+        _conversationRepository = conversationRepository;
+        _groupMessageReadStatusRepository = groupMessageReadStatusRepository;
     }
 
     public async Task<PrivateMessageDto> CreateAsync(
@@ -163,5 +170,136 @@ public class PrivateMessageService : IPrivateMessageService
             SentAt = message.SentAt,
             IsRead = message.IsRead
         };
+
     }
+    public async Task<List<PrivateMessageDto>> GetByConversationIdAsync(
+    int conversationId)
+    {
+        var messages = await _repository.GetByConversationIdAsync(
+            conversationId);
+
+        var result = new List<PrivateMessageDto>();
+
+        foreach (var message in messages)
+        {
+            var sender = await _userRepository.GetByIdAsync(message.SenderId);
+            var receiver = await _userRepository.GetByIdAsync(message.ReceiverId);
+
+            if (sender != null && receiver != null)
+            {
+                result.Add(MapToDto(
+                    message,
+                    sender.Username,
+                    receiver.Username));
+            }
+        }
+
+        return result;
+    }
+
+    public async Task<PrivateMessageDto> CreateGroupMessageAsync(
+        int senderId,
+        int conversationId,
+        string content)
+    {
+        var conversation = await _conversationRepository
+    .GetByIdAsync(conversationId);
+
+        if (conversation == null || !conversation.IsGroup)
+        {
+            throw new InvalidOperationException(
+                "Gruppkonversationen kunde inte hittas.");
+        }
+
+        var isParticipant = await _conversationRepository
+            .IsParticipantAsync(conversationId, senderId);
+
+        if (!isParticipant)
+        {
+            throw new InvalidOperationException(
+                "Du är inte deltagare i den här gruppen.");
+        }
+        if (string.IsNullOrWhiteSpace(content))
+        {
+            throw new InvalidOperationException(
+                "Meddelandet får inte vara tomt.");
+        }
+
+        if (content.Length > 5000)
+        {
+            throw new InvalidOperationException(
+                "Meddelandet får vara högst 5000 tecken.");
+        }
+
+        var sender = await _userRepository.GetByIdAsync(senderId);
+
+        if (sender == null)
+        {
+            throw new InvalidOperationException(
+                "Avsändaren kunde inte hittas.");
+        }
+
+        var message = new PrivateMessage
+        {
+            SenderId = senderId,
+            ReceiverId = senderId,
+            ConversationId = conversationId,
+            Content = content.Trim(),
+            SentAt = DateTime.UtcNow,
+            IsRead = false
+        };
+
+
+        var createdMessage = await _repository.CreateAsync(message);
+
+        // Hämta gruppens deltagare.
+        var participants = conversation.Participants;
+
+        // Skapa en lässtatus för varje deltagare utom avsändaren.
+        var readStatuses = participants
+            .Where(participant => participant.UserId != senderId)
+            .Select(participant => new GroupMessageReadStatus
+            {
+                MessageId = createdMessage.Id,
+                UserId = participant.UserId,
+                IsRead = false
+            })
+            .ToList();
+
+        // Spara deltagarnas olästa statusar.
+        await _groupMessageReadStatusRepository.CreateRangeAsync(
+            readStatuses);
+
+        return MapToDto(
+            createdMessage,
+            sender.Username,
+            sender.Username);
+
+    }
+
+    public async Task<List<GroupMessageReadStatus>>
+        GetGroupReadStatusesAsync(int userId)
+    {
+        return await _groupMessageReadStatusRepository
+            .GetByUserIdAsync(userId);
+    }
+
+    public async Task MarkGroupConversationAsReadAsync(
+        int conversationId,
+        int userId)
+    {
+        var isParticipant = await _conversationRepository
+            .IsParticipantAsync(conversationId, userId);
+
+        if (!isParticipant)
+        {
+            throw new InvalidOperationException(
+                "Du är inte deltagare i den här gruppen.");
+        }
+
+        await _groupMessageReadStatusRepository
+            .MarkConversationAsReadAsync(conversationId, userId);
+    }
+
+
 }

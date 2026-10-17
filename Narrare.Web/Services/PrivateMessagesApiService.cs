@@ -1,5 +1,6 @@
 ﻿
 using Narrare.Application.DTOs;
+using Narrare.Domain.Entities;
 
 namespace Narrare.Web.Services;
 
@@ -44,10 +45,44 @@ public class PrivateMessagesApiService
     }
 
     // Markera ett meddelande som läst.
+
     public async Task<bool> MarkAsReadAsync(int id)
     {
-        return await _apiService.PutAsync<object, object>(
+        return await _apiService.PutWithoutResponseAsync(
             $"api/PrivateMessages/{id}/read",
-            new { }) is not null;
+            new { });
     }
+
+
+    public async Task<List<PrivateMessageDto>?> GetByConversationIdAsync(
+        int conversationId)
+    {
+        return await _apiService.GetAsync<List<PrivateMessageDto>>(
+            $"api/PrivateMessages/by-conversation/{conversationId}");
+    }
+
+    public async Task<PrivateMessageDto?> CreateGroupMessageAsync(
+        CreateGroupMessageDto request)
+    {
+        return await _apiService.PostAsync<CreateGroupMessageDto, PrivateMessageDto>(
+            "api/PrivateMessages/group",
+            request);
+    }
+
+
+    public async Task<List<GroupMessageReadStatus>?>
+        GetGroupReadStatusesAsync()
+    {
+        return await _apiService.GetAsync<List<GroupMessageReadStatus>>(
+            "api/PrivateMessages/group-read-statuses");
+    }
+
+    public async Task<bool> MarkGroupConversationAsReadAsync(
+        int conversationId)
+    {
+        return await _apiService.PutWithoutResponseAsync(
+            $"api/PrivateMessages/by-conversation/{conversationId}/read",
+            new { });
+    }
+
 }

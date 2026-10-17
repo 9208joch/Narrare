@@ -2,14 +2,17 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Narrare.Application.Interfaces.Repositories;
+using Narrare.Application.Interfaces.Repositories;
 using Narrare.Application.Interfaces.Services;
+using Narrare.Application.Services;
+using Narrare.Infrastructure.Configuration;
 using Narrare.Infrastructure.Data;
+using Narrare.Infrastructure.Repositories;
 using Narrare.Infrastructure.Repositories;
 using Narrare.Infrastructure.Storage;
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Narrare.Infrastructure.Configuration;
 
 
 namespace Narrare.Infrastructure;
@@ -39,6 +42,9 @@ public static class DependencyInjection
         services.AddScoped<IUploadedImageRepository, UploadedImageRepository>();
         //services.AddScoped<IImageStorageService, ImageStorageService>(); att fixa för testning
         services.AddScoped<IPrivateMessageRepository, PrivateMessageRepository>();
+        services.AddScoped<IConversationRepository, ConversationRepository>();
+        services.AddScoped<IConversationService, ConversationService>();
+        services.AddScoped< IGroupMessageReadStatusRepository,GroupMessageReadStatusRepository>();
 
         var imageStorageProvider =
             configuration["ImageStorage:Provider"] ?? "Local";

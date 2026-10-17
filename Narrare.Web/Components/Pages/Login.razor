@@ -6,6 +6,8 @@
 @inject UsersApiService UsersApiService
 @inject CurrentUserService CurrentUserService
 @inject NavigationManager NavigationManager
+@inject PrivateMessagesApiService PrivateMessagesApiService
+@inject UnreadMessagesService UnreadMessagesService
 
 <h1 class="mb-4">Logga in</h1>
 
@@ -94,9 +96,24 @@
         }
 
         CurrentUserService.Login(result);
-        
 
         loggedInUser = result;
+
+        // Hämta mottagna privata meddelanden.
+        var inbox = await PrivateMessagesApiService.GetInboxAsync();
+
+        // Räkna unika avsändare med olästa meddelanden.
+        var unreadSenderIds = (inbox ?? new List<PrivateMessageDto>())
+            .Where(message =>
+                !message.IsRead &&
+                message.ReceiverId == result.Id &&
+                message.SenderId != result.Id)
+            .Select(message => message.SenderId)
+            .ToHashSet();
+
+        // Uppdatera räknaren i navbaren.
+        UnreadMessagesService.SetUnreadPrivateConversationCount(
+            unreadSenderIds.Count);
     }
     private void Logout()
     {

@@ -8,6 +8,9 @@ namespace Narrare.Domain.Entities;
 public class PrivateMessage
 {
     public int Id { get; set; }
+    // Vilken konversation meddelandet tillhör.
+    public int? ConversationId { get; set; }
+    public Conversation? Conversation { get; set; }
 
     // Användaren som skickade meddelandet.
     public int SenderId { get; set; }

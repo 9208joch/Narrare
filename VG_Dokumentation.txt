@@ -12,7 +12,7 @@ admin: Blockera/ avblockera användare (flyttat från G)
 admin: Skicka varning till användare samt se antal varningar(flyttat från G)
 
 
-
+chatt person till person, person till många , många till många , namnge
 
 databa på asher först 
 mata in databas
@@ -20,6 +20,7 @@ hemsida efter
 
 bildgalleri admin och användare skillnad
 SixLabors för bildhantering
+chatt räkning + 30 sek uppdatering
 
 "att fixa för testning" lös dessa innan publisering
 

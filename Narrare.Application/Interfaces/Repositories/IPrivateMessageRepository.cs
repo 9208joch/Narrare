@@ -15,4 +15,7 @@ public interface IPrivateMessageRepository
     Task<List<PrivateMessage>> GetConversationAsync(
     int userId,
     int otherUserId);
+    Task<List<PrivateMessage>> GetByConversationIdAsync(
+    int conversationId);
+
 }

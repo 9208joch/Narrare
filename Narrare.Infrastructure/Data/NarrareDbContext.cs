@@ -25,7 +25,14 @@ public class NarrareDbContext : DbContext
     public DbSet<UploadedImage> UploadedImages => Set<UploadedImage>();
     public DbSet<ImageUsage> ImageUsages => Set<ImageUsage>();
     public DbSet<PrivateMessage> PrivateMessages => Set<PrivateMessage>();
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<ConversationParticipant> ConversationParticipants
+    => Set<ConversationParticipant>();
+    public DbSet<GroupMessageReadStatus> GroupMessageReadStatuses
+    => Set<GroupMessageReadStatus>();
 
+
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -178,6 +185,7 @@ public class NarrareDbContext : DbContext
                 .WithMany(post => post.Comments)
                 .HasForeignKey(comment => comment.PostId)
                 .OnDelete(DeleteBehavior.Cascade);
+
         });
 
         modelBuilder.Entity<PrivateMessage>(entity =>
@@ -206,8 +214,15 @@ public class NarrareDbContext : DbContext
 
             entity.HasIndex(message => message.SenderId);
             entity.HasIndex(message => message.ReceiverId);
-        });
 
+            entity.HasOne(message => message.Conversation)
+           .WithMany(conversation => conversation.Messages)
+               .HasForeignKey(message => message.ConversationId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(message => message.ConversationId);
+        });
+        
         modelBuilder.Entity<Page>(entity =>
         {
             entity.HasKey(page => page.Id);
@@ -278,10 +293,11 @@ public class NarrareDbContext : DbContext
 
             entity.Property(usage => usage.SortOrder)
                 .IsRequired();
+
             
-            // En bildkoppling måste gälla antingen ett inlägg,
-            // en kommentar eller enbart galleriet.
-            entity.ToTable(table => table.HasCheckConstraint(
+    // En bildkoppling måste gälla antingen ett inlägg,
+    // en kommentar eller enbart galleriet.
+    entity.ToTable(table => table.HasCheckConstraint(
                 "CK_ImageUsage_OneTarget",
                 """
         (
@@ -297,6 +313,64 @@ public class NarrareDbContext : DbContext
         )
         """));
         });
+        modelBuilder.Entity<Conversation>(entity =>
+        {
+            entity.HasKey(conversation => conversation.Id);
+
+            entity.Property(conversation => conversation.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+
+            entity.Property(conversation => conversation.CreatedAt)
+                .IsRequired();
+        });
+        
+        modelBuilder.Entity<ConversationParticipant>(entity =>
+        {
+            entity.HasKey(participant => participant.Id);
+
+            entity.Property(participant => participant.JoinedAt)
+                .IsRequired();
+
+            entity.HasOne(participant => participant.Conversation)
+              .WithMany(conversation => conversation.Participants)
+              .HasForeignKey(participant => participant.ConversationId)
+              .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(participant => participant.User)
+                .WithMany()
+                .HasForeignKey(participant => participant.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasIndex(participant => new
+            {
+                participant.ConversationId,
+                participant.UserId
+            }).IsUnique();
+        });
+        modelBuilder.Entity<GroupMessageReadStatus>(entity =>
+        {
+            entity.HasKey(status => status.Id);
+
+            entity.HasOne(status => status.Message)
+                .WithMany()
+                .HasForeignKey(status => status.MessageId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(status => status.User)
+                .WithMany()
+                .HasForeignKey(status => status.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // En användare ska bara ha en lässtatus
+            // per meddelande.
+            entity.HasIndex(status => new
+            {
+                status.MessageId,
+                status.UserId
+            }).IsUnique();
+        });
 
     }
+
 } 

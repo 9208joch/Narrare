@@ -1,20 +1,26 @@
 ﻿@using Narrare.Application.DTOs
 @using Narrare.Web.Services
+@using System.Threading
+@using Narrare.Domain.Entities
 
+@inject ConversationsApiService ConversationsApiService
 @inject MenuItemsApiService MenuItemsApiService
 @inject CurrentUserService CurrentUserService
 @inject NavigationManager NavigationManager
+@inject UnreadMessagesService UnreadMessagesService
+@inject PrivateMessagesApiService PrivateMessagesApiService
 
 @implements IDisposable
 
 <div class="menu-container">
-
+    
     @if (menuItems == null)
     {
         <span>Laddar meny...</span>
     }
     else
     {
+        
         <!-- Meny för dator -->
         <div class="desktop-menu">
             @foreach (var menuItem in menuItems)
@@ -39,13 +45,31 @@
                     Administration
                 </a>
             }
+            
+            
+            @if (CurrentUserService.IsLoggedIn)
+            {
+                <a href="/messages" class="d-inline-flex align-items-center gap-2">
+                    <span>Meddelanden</span>
+
+                    @if (UnreadMessagesService.TotalUnreadConversationCount > 0)
+                    {
+                        <span class="badge rounded-pill"
+                              style="background-color: #222222; color: #96F90F;">
+                            @UnreadMessagesService.TotalUnreadConversationCount
+                        </span>
+                    }
+                </a>
+            }
+
+
             @if (CurrentUserService.IsLoggedIn)
             {
                 <a href="/profile">
                     Min profil
                 </a>
             }
-
+            
             @if (CurrentUserService.IsLoggedIn)
             {
                 <button class="menu-logout" @onclick="Logout">
@@ -101,6 +125,24 @@
                             Registrera
                         </a>
                     }
+                    
+                    @if (CurrentUserService.IsLoggedIn)
+                    {
+                        <a href="/messages"
+                           class="d-inline-flex align-items-center gap-2"
+                           @onclick="CloseMobileMenu">
+                            <span>Meddelanden</span>
+
+                            @if (UnreadMessagesService.TotalUnreadConversationCount > 0)
+                            {
+                                <span class="badge rounded-pill"
+                                      style="background-color: #222222; color: #96F90F;">
+                                    @UnreadMessagesService.TotalUnreadConversationCount
+                                </span>
+                            }
+                        </a>
+                    }
+
                     @if (CurrentUserService.IsLoggedIn)
                     {
                         <a href="/profile"
@@ -125,6 +167,8 @@
 @code {
     private List<MenuItemDto>? menuItems;
     private bool mobileMenuOpen = false;
+    private CancellationTokenSource? refreshCts;
+    private Task? refreshTask;
 
     private bool IsAdmin =>
         CurrentUserService.IsLoggedIn &&
@@ -134,10 +178,78 @@
     protected override async Task OnInitializedAsync()
     {
         CurrentUserService.OnChange += OnCurrentUserChanged;
+        UnreadMessagesService.OnChange += OnUnreadMessagesChanged;
 
         menuItems = await MenuItemsApiService.GetAllAsync();
+        refreshCts = new CancellationTokenSource();
+        refreshTask = RefreshUnreadMessagesAsync(refreshCts.Token);
+    }
+    private async Task RefreshUnreadMessagesAsync(
+    CancellationToken cancellationToken)
+    {
+        try
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(
+                    TimeSpan.FromSeconds(30),
+                    cancellationToken);
+
+                if (!CurrentUserService.IsLoggedIn)
+                {
+                    UnreadMessagesService.SetUnreadGroupConversationCount(0);
+                    continue;
+                }
+
+                var groups =
+                    await ConversationsApiService.GetMyConversationsAsync()
+                    ?? new List<ConversationDto>();
+
+                var statuses =
+                    await MenuGroupReadStatusesAsync();
+
+                var unreadGroupConversationIds = statuses
+                    .Where(status =>
+                        !status.IsRead &&
+                        status.Message?.ConversationId != null)
+                    .Select(status =>
+                        status.Message!.ConversationId!.Value)
+                    .Where(conversationId =>
+                        groups.Any(group => group.Id == conversationId))
+                    .Distinct()
+                    .ToHashSet();
+
+                UnreadMessagesService.SetUnreadGroupConversationCount(
+                    unreadGroupConversationIds.Count);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Förväntat när timern stoppas.
+        }
+        catch (Exception)
+        {
+            // Ett tillfälligt fel ska inte stoppa framtida kontroller.
+            // Nästa kontroll görs efter att timern startats om.
+        }
+
+    }
+    private void OnUnreadMessagesChanged()
+    {
+        _ = InvokeAsync(StateHasChanged);
+    }
+    private async Task<List<GroupMessageReadStatus>>
+    MenuGroupReadStatusesAsync()
+    {
+        return await GetGroupStatusesOrEmptyAsync();
     }
 
+    private async Task<List<GroupMessageReadStatus>>
+        GetGroupStatusesOrEmptyAsync()
+    {
+        return await PrivateMessagesApiService.GetGroupReadStatusesAsync()
+            ?? new List<GroupMessageReadStatus>();
+    }
     private void ToggleMobileMenu()
     {
         mobileMenuOpen = !mobileMenuOpen;
@@ -147,7 +259,7 @@
     {
         mobileMenuOpen = false;
     }
-
+    
     private void Logout()
     {
         mobileMenuOpen = false;
@@ -157,11 +269,60 @@
 
     private void OnCurrentUserChanged()
     {
-        _ = InvokeAsync(StateHasChanged);
-    }
+        _ = InvokeAsync(async () =>
+        {
+            StateHasChanged();
 
+            if (CurrentUserService.IsLoggedIn)
+            {
+                await RefreshGroupUnreadCountAsync();
+            }
+            else
+            {
+                UnreadMessagesService.SetUnreadGroupConversationCount(0);
+            }
+        });
+    }
+    private async Task RefreshGroupUnreadCountAsync()
+    {
+        try
+        {
+            var groups =
+                await ConversationsApiService.GetMyConversationsAsync()
+                ?? new List<ConversationDto>();
+
+            var statuses =
+                await PrivateMessagesApiService.GetGroupReadStatusesAsync()
+                ?? new List<GroupMessageReadStatus>();
+
+            var unreadGroupConversationIds = statuses
+                .Where(status =>
+                    !status.IsRead &&
+                    status.Message?.ConversationId != null)
+                .Select(status =>
+                    status.Message!.ConversationId!.Value)
+                .Where(conversationId =>
+                    groups.Any(group => group.Id == conversationId))
+                .Distinct()
+                .ToHashSet();
+
+            UnreadMessagesService.SetUnreadGroupConversationCount(
+                unreadGroupConversationIds.Count);
+        }
+        catch (Exception)
+        {
+            // Behåll befintligt värde om API-anropet misslyckas.
+        }
+    }
     public void Dispose()
     {
         CurrentUserService.OnChange -= OnCurrentUserChanged;
+        UnreadMessagesService.OnChange -= OnUnreadMessagesChanged;
+
+        if (refreshCts != null)
+        {
+            refreshCts.Cancel();
+            refreshCts.Dispose();
+        }
     }
 }

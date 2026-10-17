@@ -45,8 +45,8 @@ public class ApiService
     }
 
     public async Task<TResponse?> PostAsync<TRequest, TResponse>(
-    string url,
-    TRequest data)
+     string url,
+     TRequest data)
     {
         var client = _httpClientFactory.CreateClient("NarrareApi");
 
@@ -89,7 +89,7 @@ public class ApiService
         {
             return default;
         }
-
+        
         return await response.Content.ReadFromJsonAsync<TResponse>();
     }
     public async Task<bool> PutWithoutResponseAsync<TRequest>(
