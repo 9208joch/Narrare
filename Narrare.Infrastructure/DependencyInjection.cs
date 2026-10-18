@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Narrare.Application.Interfaces.Repositories;
+using Narrare.Application.Interfaces;
 using Narrare.Application.Interfaces.Repositories;
 using Narrare.Application.Interfaces.Services;
 using Narrare.Application.Services;
 using Narrare.Infrastructure.Configuration;
 using Narrare.Infrastructure.Data;
-using Narrare.Infrastructure.Repositories;
 using Narrare.Infrastructure.Repositories;
 using Narrare.Infrastructure.Storage;
 using System;
@@ -45,6 +44,7 @@ public static class DependencyInjection
         services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<IConversationService, ConversationService>();
         services.AddScoped< IGroupMessageReadStatusRepository,GroupMessageReadStatusRepository>();
+        services.AddScoped<IContentReportRepository, ContentReportRepository>();
 
         var imageStorageProvider =
             configuration["ImageStorage:Provider"] ?? "Local";

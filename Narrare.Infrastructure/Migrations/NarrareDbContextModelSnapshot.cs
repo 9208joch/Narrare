@@ -112,6 +112,48 @@ namespace Narrare.Infrastructure.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("Narrare.Domain.Entities.ContentReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsReviewed")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<int>("ReporterUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("ReporterUserId");
+
+                    b.ToTable("ContentReports", t =>
+                        {
+                            t.HasCheckConstraint("CK_ContentReports_PostOrComment", "([PostId] IS NOT NULL AND [CommentId] IS NULL)\r\nOR\r\n([PostId] IS NULL AND [CommentId] IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Narrare.Domain.Entities.Conversation", b =>
                 {
                     b.Property<int>("Id")
@@ -607,6 +649,31 @@ namespace Narrare.Infrastructure.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Narrare.Domain.Entities.ContentReport", b =>
+                {
+                    b.HasOne("Narrare.Domain.Entities.Comment", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Narrare.Domain.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Narrare.Domain.Entities.User", "ReporterUser")
+                        .WithMany()
+                        .HasForeignKey("ReporterUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("ReporterUser");
                 });
 
             modelBuilder.Entity("Narrare.Domain.Entities.ConversationParticipant", b =>

@@ -1,5 +1,5 @@
 ﻿@page "/categories/{id:int}"
-
+@* CategoryDetails.razor *@
 @using Narrare.Application.DTOs
 @using Narrare.Domain.Entities
 @using Narrare.Web.Services
@@ -11,6 +11,7 @@
 @inject CommentsApiService CommentsApiService
 @inject ApiService ApiService
 @inject PostImagesApiService PostImagesApiService
+@inject ContentReportsApiService ContentReportsApiService
 
 
 
@@ -44,7 +45,7 @@
                         <label class="form-label">
                             Titel
                         </label>
-
+                        
                         <input class="form-control"
                                @bind="newPost.Title" />
                     </div>
@@ -133,7 +134,8 @@
                         else
                         {
 
-                            <div class="d-flex align-items-center gap-2 mb-2">
+                            
+                            <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                                 <a href="@($"/users/{post.UserId}")"
                                    class="d-flex align-items-center gap-2 text-decoration-none text-reset">
 
@@ -146,24 +148,64 @@
 
                                     <strong>@post.Username</strong>
                                 </a>
+
+                                @if (CurrentUserService.IsLoggedIn)
+                                {
+                                    <div class="dropdown position-relative">
+                                        <button type="button"
+                                                class="btn btn-link text-dark text-decoration-none p-1"
+                                                title="Fler alternativ"
+                                                aria-label="Fler alternativ för inlägget"
+                                                @onclick="() => TogglePostReportMenu(post.Id)">
+                                            <span style="font-size: 1.6rem; line-height: 1;">⋮</span>
+                                        </button>
+                                        
+                                        @if (openReportMenuPostId == post.Id)
+                                        {
+                                            <div class="dropdown-menu show"
+                                                 style="position: absolute; top: 100%; right: 0; z-index: 1000;">
+                                                <button type="button"
+                                                        class="dropdown-item"
+                                                        @onclick="() => StartPostReport(post.Id)">
+                                                    Anmäl
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
                             </div>
 
+
                             
-                            <h3>@post.Title</h3>
-                            <p>@post.Content</p>
-                            @if (postImages.TryGetValue(post.Id, out var images)
-                              && images.Count > 0)
+                            
+                            @if (post.IsDeleted)
                             {
-                                <div class="d-flex flex-wrap gap-3 mt-3 mb-3">
-                                    @foreach (var image in images.OrderBy(image => image.SortOrder))
-                                    {
-                                        <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
-                                             alt="Bild till inlägget"
-                                             class="img-fluid rounded"
-                                             style="max-width: 250px; max-height: 250px; object-fit: contain;" />
-                                    }
-                                </div>
+                                <h3>Inlägg borttaget</h3>
+
+                                <p class="fst-italic text-muted">
+                                    Detta inlägg har tagits bort eftersom det strider mot Narrares regler.
+                                </p>
                             }
+                            else
+                            {
+                                <h3>@post.Title</h3>
+                                <p>@post.Content</p>
+
+                                @if (postImages.TryGetValue(post.Id, out var images)
+                                     && images.Count > 0)
+                                {
+                                    <div class="d-flex flex-wrap gap-3 mt-3 mb-3">
+                                        @foreach (var image in images.OrderBy(image => image.SortOrder))
+                                        {
+                                            <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                                                 alt="Bild till inlägget"
+                                                 class="img-fluid rounded"
+                                                 style="max-width: 250px; max-height: 250px; object-fit: contain;" />
+                                        }
+                                    </div>
+                                }
+                            }
+
                             <small>
                                 Skapad: @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </small>
@@ -202,10 +244,36 @@ else if (postComments.Count == 0)
     </p>
 }
 else
-{
+                        {
+                            
     @foreach (var comment in postComments)
     {
                                 <div class="border border-4 rounded p-2 mb-2">
+                                    @if (CurrentUserService.IsLoggedIn)
+                                    {
+                                        <div class="dropdown text-end">
+                                            <button type="button"
+                                                    class="btn btn-link text-dark text-decoration-none p-1"
+                                                    title="Fler alternativ"
+                                                    aria-label="Fler alternativ för kommentaren"
+                                                    @onclick="() => ToggleCommentReportMenu(comment.Id)">
+                                                <span style="font-size: 1.6rem; line-height: 1;">⋮</span>
+                                            </button>
+
+                                            @if (openReportMenuCommentId == comment.Id)
+                                            {
+                                                <div class="dropdown-menu show position-absolute end-0"
+                                                     style="z-index: 1050;">
+                                                    <button type="button"
+                                                            class="dropdown-item"
+                                                            @onclick="() => OpenCommentReportModal(comment.Id)">
+                                                        <i class="bi bi-flag me-2"></i>
+                                                        Anmäl kommentar
+                                                    </button>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
 
             @if (CurrentUserService.IsLoggedIn &&
                  editingComments.ContainsKey(comment.Id) &&
@@ -244,9 +312,18 @@ else
                                             </a>
                                         </div>
 
-
-                    <p class="mb-1">@comment.Content</p>
-
+                                        
+                                        @if (comment.IsDeleted)
+                                        {
+                                            <p class="mb-1 fst-italic text-muted">
+                                                Denna kommentar har tagits bort eftersom den strider mot Narrares regler.
+                                            </p>
+                                        }
+                                        else
+                                        {
+                                            <p class="mb-1">@comment.Content</p>
+                                        }
+                                        
                      <small class="text-muted">
                    Skapad:
                      @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
@@ -303,6 +380,79 @@ else
 
 </div>
 
+@if (showReportModal)
+{
+    <div class="modal d-block"
+         tabindex="-1"
+         role="dialog"
+         style="background-color: rgba(0, 0, 0, 0.5);"
+         aria-modal="true">
+
+        <div class="modal-dialog modal-dialog-centered"
+             role="document">
+
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Anmäl innehåll</h5>
+
+                    <button type="button"
+                            class="btn-close"
+                            aria-label="Stäng"
+                            @onclick="CloseReportModal">
+                    </button>
+                </div>
+
+                <div class="modal-body">
+                    <p>
+                        Berätta varför du anmäler det här innehållet.
+                    </p>
+
+                    <label class="form-label"
+                           for="reportReason">
+                        Motivering
+                    </label>
+
+                    <textarea id="reportReason"
+                              class="form-control"
+                              rows="4"
+                              maxlength="1000"
+                              placeholder="Beskriv anledningen till anmälan..."
+                              @bind="reportReason">
+                    </textarea>
+
+                    <small class="text-muted">
+                        Max 1000 tecken.
+                    </small>
+
+                    @if (!string.IsNullOrWhiteSpace(reportMessage))
+                    {
+                        <div class="alert @(reportSucceeded ? "alert-success" : "alert-danger") mt-3">
+                            @reportMessage
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button"
+                            class="btn btn-secondary"
+                            @onclick="CloseReportModal">
+                        Avbryt
+                    </button>
+
+                    <button type="button"
+                            class="btn btn-primary"
+                            disabled="@string.IsNullOrWhiteSpace(reportReason)"
+                            @onclick="SubmitReportAsync">
+                        Skicka anmälan
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     
     [Parameter]
@@ -311,7 +461,11 @@ else
     private CategoryDto? category;
 
     private List<PostDto>? posts;
+    // Vilket inläggs meny som är öppen.
+    private int? openReportMenuPostId;
 
+    private int? openReportMenuCommentId;
+    
     private Dictionary<int, List<PostImageDto>> postImages = new();
 
     private Post newPost = new();
@@ -686,4 +840,110 @@ else
         
         posts?.Remove(post);
     }
+    private void TogglePostReportMenu(int postId)
+    {
+        if (openReportMenuPostId == postId)
+        {
+            openReportMenuPostId = null;
+        }
+        else
+        {
+            openReportMenuPostId = postId;
+        }
+    }
+    private void ToggleCommentReportMenu(int commentId)
+    {
+        openReportMenuCommentId =
+            openReportMenuCommentId == commentId ? null : commentId;
+    }
+
+    private void StartPostReport(int postId)
+    {
+        openReportMenuPostId = null;
+
+        reportPostId = postId;
+        reportCommentId = null;
+
+        reportReason = string.Empty;
+        reportMessage = null;
+        reportSucceeded = false;
+
+        showReportModal = true;
+    }
+    // Vilket innehåll som ska anmälas.
+    private int? reportPostId;
+    private int? reportCommentId;
+    
+    // Popup-rutans synlighet.
+    private bool showReportModal;
+
+    // Användarens motivering.
+    private string reportReason = string.Empty;
+
+    // Meddelande efter att anmälan skickats.
+    private string? reportMessage;
+    private bool reportSucceeded;
+
+    private void CloseReportModal()
+    {
+        showReportModal = false;
+
+        reportPostId = null;
+        reportCommentId = null;
+        
+        reportReason = string.Empty;
+        reportMessage = null;
+    }
+    
+    private async Task SubmitReportAsync()
+    {
+        // Kontrollera att det finns en motivering.
+        if (string.IsNullOrWhiteSpace(reportReason))
+        {
+            reportMessage = "Du måste ange en motivering.";
+            reportSucceeded = false;
+            return;
+        }
+
+        // Skapa en begäran till API:t.
+        var request = new CreateContentReportDto
+        {
+            PostId = reportPostId,
+            CommentId = reportCommentId,
+            Reason = reportReason.Trim()
+        };
+
+        try
+        {
+            bool success = await ContentReportsApiService.CreateAsync(request);
+
+            if (success)
+            {
+                reportSucceeded = true;
+                reportMessage = "Din anmälan har skickats.";
+                reportReason = string.Empty;
+            }
+            else
+            {
+                reportSucceeded = false;
+                reportMessage = "Anmälan kunde inte skickas. Försök igen.";
+            }
+        }
+        catch (Exception)
+        {
+            reportSucceeded = false;
+            reportMessage = "Ett fel uppstod när anmälan skulle skickas.";
+        }
+    }
+    private void OpenCommentReportModal(int commentId)
+    {
+        reportCommentId = commentId;
+        reportPostId = null;
+        reportReason = string.Empty;
+        reportMessage = string.Empty;
+        reportSucceeded = false;
+        showReportModal = true;
+        openReportMenuCommentId = null;
+    }
+    
 }

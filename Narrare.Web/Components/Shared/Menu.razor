@@ -46,6 +46,13 @@
                 </a>
             }
             
+            @if (IsAdmin)
+            {
+                <NavLink class="menu-admin" href="/admin/reports">
+                    Anmälningsgranskning
+                </NavLink>
+            }
+
             
             @if (CurrentUserService.IsLoggedIn)
             {
@@ -117,7 +124,7 @@
                             @menuItem.Name
                         </a>
                     }
-
+                    
                     @if (!CurrentUserService.IsLoggedIn)
                     {
                         <a href="/register"
@@ -158,6 +165,15 @@
                             Administration
                         </a>
                     }
+                    
+                    @if (IsAdmin)
+                    {
+                        <NavLink href="/admin/reports"
+                                 @onclick="CloseMobileMenu">
+                            Anmälningsgranskning
+                        </NavLink>
+                    }
+
                 </div>
             }
         </div>
@@ -314,6 +330,7 @@
             // Behåll befintligt värde om API-anropet misslyckas.
         }
     }
+    
     public void Dispose()
     {
         CurrentUserService.OnChange -= OnCurrentUserChanged;

@@ -60,6 +60,7 @@ public class PostService : IPostService
         return existingPost;
     }
 
+
     public async Task<bool> DeleteAsync(int id)
     {
         var post = await _postRepository.GetByIdAsync(id);
@@ -69,9 +70,13 @@ public class PostService : IPostService
             return false;
         }
 
-        _postRepository.Delete(post);
+        // Markera inlägget som borttaget i stället för att radera det.
+        post.IsDeleted = true;
+        post.UpdatedAt = DateTime.UtcNow;
+
         await _postRepository.SaveChangesAsync();
 
         return true;
     }
+
 }

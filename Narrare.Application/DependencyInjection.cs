@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<ISiteStyleService, SiteStyleService>();
         services.AddScoped<IImageService, ImageService>();
         services.AddScoped<IPrivateMessageService, PrivateMessageService>();
+        services.AddScoped<IContentReportService, ContentReportService>();
 
         return services;
     }

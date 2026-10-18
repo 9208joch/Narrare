@@ -28,4 +28,8 @@ public class Comment
     public int? DeletedByUserId { get; set; }
 
     public DateTime? DeletedAt { get; set; }
+
+    
+   
+    
 }

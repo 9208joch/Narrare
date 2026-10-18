@@ -98,6 +98,38 @@ else
     {
         <div @key="post.Id" class="card mb-4">
             <div class="card-body">
+                
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        @* Här ligger inläggets befintliga avsändare om du visar den. *@
+                    </div>
+
+                    @if (CurrentUserService.IsLoggedIn)
+                    {
+                        <div class="dropdown position-relative">
+                            <button type="button"
+                                    class="btn btn-link text-dark text-decoration-none p-1"
+                                    title="Fler alternativ"
+                                    aria-label="Fler alternativ för inlägget"
+                                    @onclick="() => TogglePostReportMenu(post.Id)">
+                                <span style="font-size: 1.6rem; line-height: 1;">⋮</span>
+                            </button>
+
+                            @if (openReportMenuPostId == post.Id)
+                            {
+                                <div class="dropdown-menu show"
+                                     style="position: absolute; top: 100%; right: 0; z-index: 1000;">
+                                    <button type="button"
+                                            class="dropdown-item"
+                                            @onclick="() => StartPostReport(post.Id)">
+                                        Anmäl
+                                    </button>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                
 
                 ...
 
@@ -137,17 +169,34 @@ else
 }
 else
 {
-    <h3 class="card-title">
-        @post.Title
-    </h3>
+   
+                        @if (post.IsDeleted)
+                        {
+                            <h3 class="card-title">Inlägg borttaget</h3>
 
-    <p class="text-muted">
-        @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
-    </p>
+                            <p class="text-muted">
+                                @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </p>
 
-                        <p class="card-text">
-                            @post.Content
-                        </p>
+                            <p class="card-text fst-italic">
+                                Detta inlägg har tagits bort eftersom det strider mot Narrares regler.
+                            </p>
+                        }
+                        else
+                        {
+                            <h3 class="card-title">
+                                @post.Title
+                            </h3>
+
+                            <p class="text-muted">
+                                @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                            </p>
+
+                            <p class="card-text">
+                                @post.Content
+                            </p>
+                        }
+
 
                         @* Visa bilder som hör till inlägget *@
                         @if (postImages.TryGetValue(post.Id, out var images)
@@ -212,6 +261,32 @@ else
                         @foreach (var comment in comments[post.Id])
                         {
                             <div class="border rounded p-2 mb-2">
+                                
+                                @if (CurrentUserService.IsLoggedIn)
+                                {
+                                    <div class="d-flex justify-content-end position-relative">
+                                        <button type="button"
+                                                class="btn btn-sm btn-light"
+                                                title="Fler alternativ"
+                                                aria-label="Fler alternativ för kommentaren"
+                                                @onclick="() => ToggleCommentReportMenu(comment.Id)">
+                                            <span style="font-size: 1.4rem; line-height: 1;">⋮</span>
+                                        </button>
+
+                                        @if (openReportMenuCommentId == comment.Id)
+                                        {
+                                            <div class="dropdown-menu show"
+                                                 style="position: absolute; top: 100%; right: 0; z-index: 10;">
+                                                <button type="button"
+                                                        class="dropdown-item"
+                                                        @onclick="() => StartCommentReport(comment.Id)">
+                                                    Anmäl
+                                                </button>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+
 
                                 @if (CurrentUserService.IsLoggedIn
                                 && editingComments.ContainsKey(comment.Id)
@@ -323,6 +398,11 @@ else
     private Dictionary<int, string> newCommentContent = new();
 
     private List<PostDto>? posts;
+    // Vilket inläggs meny som är öppen.
+    private int? openReportMenuPostId;
+
+    // Vilken kommentar som är öppen i menyn.
+    private int? openReportMenuCommentId;
 
     private Dictionary<int, List<PostImageDto>> postImages = new();
 
@@ -649,7 +729,8 @@ private async Task CreatePost()
         {
             return;
         }
-        
+         
+
         // Visa att inlägget har modererats istället för att
         // ta bort det från listan.
         post.IsDeleted = true;
@@ -663,6 +744,46 @@ private async Task CreatePost()
         comments.Remove(post.Id);
         newCommentContent.Remove(post.Id);
     }
+    private void TogglePostReportMenu(int postId)
+    {
+        if (openReportMenuPostId == postId)
+        {
+            openReportMenuPostId = null;
+        }
+        else
+        {
+            openReportMenuPostId = postId;
+            openReportMenuCommentId = null;
+        }
+    }
+    
+    private void StartPostReport(int postId)
+    {
+        openReportMenuPostId = null;
+
+        // Popup-rutan kopplar vi in i nästa steg.
+    }
+    
+    private void ToggleCommentReportMenu(int commentId)
+    {
+        if (openReportMenuCommentId == commentId)
+        {
+            openReportMenuCommentId = null;
+        }
+        else
+        {
+            openReportMenuCommentId = commentId;
+            openReportMenuPostId = null;
+        }
+    }
+
+    private void StartCommentReport(int commentId)
+    {
+        openReportMenuCommentId = null;
+
+        // Popup-rutan kopplar vi in i nästa steg.
+    }
+
     
 }
 

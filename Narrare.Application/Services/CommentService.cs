@@ -15,7 +15,7 @@ public class CommentService : ICommentService
     {
         _commentRepository = commentRepository;
     }
-
+    
     public async Task<List<Comment>> GetAllAsync()
     {
         return await _commentRepository.GetAllAsync();
@@ -68,6 +68,24 @@ public class CommentService : ICommentService
         }
 
         _commentRepository.Delete(comment);
+        await _commentRepository.SaveChangesAsync();
+
+        return true;
+    }
+    public async Task<bool> DeleteAsync(int id, int deletedByUserId)
+    {
+        var comment = await _commentRepository.GetByIdAsync(id);
+
+        if (comment == null)
+        {
+            return false;
+        }
+
+        comment.IsDeleted = true;
+        comment.DeletedByUserId = deletedByUserId;
+        comment.DeletedAt = DateTime.UtcNow;
+        comment.UpdatedAt = DateTime.UtcNow;
+
         await _commentRepository.SaveChangesAsync();
 
         return true;

@@ -30,9 +30,10 @@ public class NarrareDbContext : DbContext
     => Set<ConversationParticipant>();
     public DbSet<GroupMessageReadStatus> GroupMessageReadStatuses
     => Set<GroupMessageReadStatus>();
+    public DbSet<ContentReport> ContentReports { get; set; }
 
 
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -370,7 +371,42 @@ public class NarrareDbContext : DbContext
                 status.UserId
             }).IsUnique();
         });
+        modelBuilder.Entity<ContentReport>(entity =>
+        {
+            entity.Property(report => report.Reason)
+                .IsRequired()
+                .HasMaxLength(1000);
+
+            entity.Property(report => report.CreatedAt)
+                .IsRequired();
+
+            // En anmälan ska gälla antingen ett inlägg
+            // eller en kommentar, aldrig båda eller inget av dem.
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_ContentReports_PostOrComment",
+                """
+        ([PostId] IS NOT NULL AND [CommentId] IS NULL)
+        OR
+        ([PostId] IS NULL AND [CommentId] IS NOT NULL)
+        """));
+
+            entity.HasOne(report => report.ReporterUser)
+                .WithMany()
+                .HasForeignKey(report => report.ReporterUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(report => report.Post)
+                .WithMany()
+                .HasForeignKey(report => report.PostId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(report => report.Comment)
+                .WithMany()
+                .HasForeignKey(report => report.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
     }
+
 
 } 

@@ -229,7 +229,7 @@ public class CommentsController : ControllerBase
         {
             return NotFound();
         }
-        
+
         // Vanlig användare får bara ta bort sina egna kommentarer.
         // Admin får ta bort alla kommentarer.
         if (currentUser.Role != Narrare.Domain.Enums.UserRole.Admin &&
@@ -238,12 +238,15 @@ public class CommentsController : ControllerBase
             return Forbid();
         }
 
-        // Soft delete
-        comment.IsDeleted = true;
-        comment.DeletedByUserId = currentUser.Id;
-        comment.DeletedAt = DateTime.UtcNow;
+        // Utför mjuk borttagning och spara vem som tog bort kommentaren.
+        bool success = await _commentService.DeleteAsync(
+            id,
+            currentUser.Id);
 
-        await _commentService.UpdateAsync(id, comment);
+        if (!success)
+        {
+            return NotFound();
+        }
 
         return NoContent();
     }

@@ -1,0 +1,192 @@
+﻿@page "/admin/reports"
+
+@using Narrare.Application.DTOs
+@using Narrare.Web.Services
+
+@inject ContentReportsApiService ContentReportsApiService
+@inject CurrentUserService CurrentUserService
+@inject PostsApiService PostsApiService
+@inject CommentsApiService CommentsApiService
+
+<PageTitle>Anmälningsgranskning</PageTitle>
+
+<h3>Anmälningsgranskning</h3>
+@if (!string.IsNullOrEmpty(deleteMessage))
+{
+    <div class="alert @(deleteSucceeded ? "alert-success" : "alert-danger")"
+         role="alert">
+        @deleteMessage
+    </div>
+}
+
+@if (!CurrentUserService.IsLoggedIn)
+{
+    <p>Du måste logga in för att fortsätta.</p>
+}
+else if (reports == null)
+{
+    <p>Laddar anmälningar...</p>
+}
+else if (reports.Count == 0)
+{
+    <p>Det finns inga anmälningar att visa.</p>
+}
+else
+{
+     
+    @foreach (var report in reports)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <h5 class="card-title">
+                    Anmälan #@report.Id
+                </h5>
+
+                <p>
+                    <strong>Anmäld av:</strong>
+                    @(report.ReporterUsername
+                        ?? $"Användare #{report.ReporterUserId}")
+                </p>
+
+                @if (report.PostId.HasValue)
+                {
+                    <p>
+                        <strong>Inlägg:</strong>
+                        @(report.PostTitle
+                            ?? $"Inlägg #{report.PostId}")
+                    </p>
+
+                    @if (report.PostIsDeleted)
+                    {
+                        <p class="text-muted fst-italic">
+                            Detta inlägg har redan tagits bort eftersom det
+                            strider mot Narrares regler.
+                        </p>
+                    }
+                }
+                else if (report.CommentId.HasValue)
+                {
+                    <p>
+                        <strong>Kommentar:</strong>
+                        @(report.CommentIsDeleted
+                            ? $"Kommentar #{report.CommentId} (borttagen)"
+                            : report.CommentContent ?? $"Kommentar #{report.CommentId}")
+                    </p>
+                    
+                    @if (report.CommentIsDeleted)
+                    {
+                        <p class="text-muted fst-italic">
+                            Denna kommentar har tagits bort eftersom den strider mot
+                            Narrares regler.
+                        </p>
+                    }
+                }
+
+                <p>
+                    <strong>Motivering:</strong>
+                    @report.Reason
+                </p>
+
+                <p>
+                    <strong>Skapad:</strong>
+                    @report.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
+                </p>
+
+                <p>
+                    <strong>Status:</strong>
+                    @(report.IsReviewed ? "Granskad" : "Ej granskad")
+                </p>
+
+                @if (!report.IsReviewed)
+                {
+                    <button class="btn btn-success me-2"
+                            @onclick="() => MarkAsReviewedAsync(report.Id)">
+                        Markera som granskad
+                    </button>
+                }
+
+                @if (report.PostId.HasValue && !report.PostIsDeleted)
+                {
+                    <button class="btn btn-danger"
+                            @onclick="() => DeleteReportedPostAsync(
+                                report.PostId.Value)">
+                    Ta bort inlägg
+                    </button>
+                }
+
+                @if (report.CommentId.HasValue && !report.CommentIsDeleted)
+                {
+                    <button class="btn btn-danger"
+                            @onclick="() => DeleteReportedCommentAsync(report.CommentId.Value)">
+                        Ta bort kommentar
+                    </button>
+                }
+            </div>
+        </div>
+    
+        
+    }
+}
+
+@code {
+    private List<ContentReportDto>? reports;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!CurrentUserService.IsLoggedIn)
+            return;
+
+        reports = await ContentReportsApiService.GetAllAsync();
+    }
+    
+    private async Task MarkAsReviewedAsync(int reportId)
+    {
+        bool success =
+            await ContentReportsApiService.MarkAsReviewedAsync(reportId);
+
+        if (success)
+        {
+            // Hämta den uppdaterade listan från API:t.
+            reports = await ContentReportsApiService.GetAllAsync();
+        }
+    }
+    
+    private string deleteMessage = string.Empty;
+    private bool deleteSucceeded;
+
+    private async Task DeleteReportedPostAsync(int postId)
+    {
+        bool success = await PostsApiService.DeleteAsync(postId);
+
+        deleteSucceeded = success;
+
+        if (success)
+        {
+            deleteMessage = "Inlägget har tagits bort.";
+            reports = await ContentReportsApiService.GetAllAsync();
+        }
+        else
+        {
+            deleteMessage = "Kunde inte ta bort inlägget.";
+        }
+    }
+    private async Task DeleteReportedCommentAsync(int commentId)
+    {
+        bool success = await CommentsApiService.DeleteAsync(commentId);
+
+        deleteSucceeded = success;
+
+        if (success)
+        {
+            deleteMessage = "Kommentaren har tagits bort.";
+            reports = await ContentReportsApiService.GetAllAsync();
+        }
+        else
+        {
+            deleteMessage = "Kunde inte ta bort kommentaren.";
+        }
+    }
+
+    
+}
+
