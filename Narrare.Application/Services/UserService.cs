@@ -5,6 +5,7 @@ using Narrare.Application.Interfaces.Repositories;
 using Narrare.Application.Interfaces.Services;
 using Narrare.Domain.Entities;
 using Narrare.Application.DTOs;
+using Microsoft.AspNetCore.Identity;
 
 namespace Narrare.Application.Services;
 
@@ -12,6 +13,7 @@ namespace Narrare.Application.Services;
 public class UserService : IUserService
 {
     private readonly IUserRepository _userRepository;
+    private readonly PasswordHasher<User> _passwordHasher = new();
 
     public UserService(IUserRepository userRepository)
     {
@@ -39,7 +41,7 @@ public class UserService : IUserService
 
         return user != null;
     }
-
+    
     public async Task<User?> RegisterAsync(RegisterUserDto dto)
     {
         if (await UsernameExistsAsync(dto.Username))
@@ -50,7 +52,7 @@ public class UserService : IUserService
         var user = new User
         {
             Username = dto.Username,
-            PasswordHash = dto.Password,
+            PasswordHash = string.Empty,
             Age = dto.Age,
             Location = dto.Location,
             Occupation = dto.Occupation,
@@ -58,7 +60,7 @@ public class UserService : IUserService
             CreatedAt = DateTime.UtcNow,
             IsBlocked = false
         };
-
+        user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
         await _userRepository.AddAsync(user);
         await _userRepository.SaveChangesAsync();
 
@@ -67,20 +69,39 @@ public class UserService : IUserService
     public async Task<UserDto?> LoginAsync(LoginUserDto dto)
     {
         var user = await _userRepository.GetByUsernameAsync(dto.Username);
-        
-        if (user == null)
+
+        if (user == null) return null;
+        if (user.IsBlocked) return null;
+
+        bool passwordIsValid = false;
+
+        // Försök verifiera lösenordet som en hash.
+        try
         {
-            return null;
+            var result = _passwordHasher.VerifyHashedPassword(
+                user,
+                user.PasswordHash,
+                dto.Password);
+
+            passwordIsValid = result != PasswordVerificationResult.Failed;
+        }
+        catch (FormatException)
+        {
+            // Befintliga lösenord i klartext kan inte verifieras som hash.
         }
 
-        if (user.IsBlocked)
+        // Hantera äldre konton som fortfarande har lösenord i klartext.
+        if (!passwordIsValid)
         {
-            return null;
-        }
+            if (user.PasswordHash != dto.Password)
+            {
+                return null;
+            }
 
-        if (user.PasswordHash != dto.Password)
-        {
-            return null;
+            // Uppgradera lösenordet till en hash.
+            user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
+
+            await _userRepository.SaveChangesAsync();
         }
 
         return new UserDto

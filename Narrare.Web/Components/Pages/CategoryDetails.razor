@@ -12,9 +12,7 @@
 @inject ApiService ApiService
 @inject PostImagesApiService PostImagesApiService
 @inject ContentReportsApiService ContentReportsApiService
-
-
-
+@inject LikeApiService LikeApiService
 
 <PageTitle>Kategori – Narrare</PageTitle>
 
@@ -204,8 +202,18 @@
                                         }
                                     </div>
                                 }
+                                <div class="d-flex align-items-center gap-2 mt-2 mb-2">
+                                    <button type="button"
+                                            class="btn btn-sm @(likedPosts.TryGetValue(post.Id, out var isPostLiked) && isPostLiked ? "btn-success" : "btn-light")"
+                                            title="Gilla inlägget"
+                                            aria-label="Gilla inlägget"
+                                            @onclick="() => TogglePostLikeAsync(post.Id)">
+                                        <span aria-hidden="true">🌸</span>
+                                        <span>@(postLikeCounts.TryGetValue(post.Id, out var count) ? count : 0)</span>
+                                    </button>
+                                </div>
                             }
-
+                            
                             <small>
                                 Skapad: @post.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                             </small>
@@ -328,6 +336,16 @@ else
                    Skapad:
                      @comment.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")
                        </small>
+                                        <div class="d-flex align-items-center gap-2 mt-2 mb-2">
+                                            <button type="button"
+                                                    class="btn btn-sm @(likedComments.TryGetValue(comment.Id, out var isCommentLiked) && isCommentLiked ? "btn-success" : "btn-light")"
+                                                    title="Gilla kommentaren"
+                                                    aria-label="Gilla kommentaren"
+                                                    @onclick="() => ToggleCommentLikeAsync(comment.Id)">
+                                                <span aria-hidden="true">🌸</span>
+                                                <span>@(commentLikeCounts.TryGetValue(comment.Id, out var count) ? count : 0)</span>
+                                            </button>
+                                        </div>
 
 
                 @if (CurrentUserService.IsLoggedIn &&
@@ -485,6 +503,16 @@ else
     private Dictionary<int, string> editedCommentContents = new();
 
     private IBrowserFile? selectedPostImage;
+    // Antal blommor per inlägg.
+    private Dictionary<int, int> postLikeCounts = new();
+
+    // Om den inloggade användaren har gillat respektive inlägg.
+    private Dictionary<int, bool> likedPosts = new();
+    // Antal blommor per kommentar.
+    private Dictionary<int, int> commentLikeCounts = new();
+
+    // Om den inloggade användaren har gillat respektive kommentar.
+    private Dictionary<int, bool> likedComments = new();
 
     private void HandlePostImageSelected(InputFileChangeEventArgs e)
     {
@@ -497,6 +525,7 @@ else
 
         if (category != null)
         {
+            
             posts = await PostsApiService.GetByCategoryAsync(Id);
             foreach (var post in posts)
             {
@@ -505,6 +534,17 @@ else
 
                 postImages[post.Id] =
                     images ?? new List<PostImageDto>();
+            }
+            // Ladda antalet blommor för varje inlägg.
+            foreach (var post in posts)
+            {
+                var result = await LikeApiService.GetPostLikeAsync(post.Id);
+
+                if (result != null)
+                {
+                    postLikeCounts[post.Id] = result.Count;
+                    likedPosts[post.Id] = result.IsLiked;
+                }
             }
             foreach (var post in posts)
             {
@@ -530,14 +570,29 @@ else
                 {
                     foreach (var post in posts)
                     {
+                        
                         var postComments =
                             await CommentsApiService.GetByPostAsync(post.Id);
 
                         comments[post.Id] =
                             postComments ?? new List<CommentDto>();
                     }
+                    // Ladda antalet blommor och aktuell användares gillningar.
+                    foreach (var postComments in comments.Values)
+                    {
+                        foreach (var comment in postComments)
+                        {
+                            var result = await LikeApiService.GetCommentLikeAsync(comment.Id);
+
+                            if (result != null)
+                            {
+                                commentLikeCounts[comment.Id] = result.Count;
+                                likedComments[comment.Id] = result.IsLiked;
+                            }
+                        }
+                    }
                 }
-}
+            }
         }
     }
     
@@ -944,6 +999,41 @@ else
         reportSucceeded = false;
         showReportModal = true;
         openReportMenuCommentId = null;
+    }
+    private async Task TogglePostLikeAsync(int postId)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+        
+        var result = await LikeApiService.TogglePostLikeAsync(postId);
+
+        if (result == null)
+        {
+            return;
+        }
+
+        postLikeCounts[postId] = result.Count;
+        likedPosts[postId] = result.IsLiked;
+    }
+    private async Task ToggleCommentLikeAsync(int commentId)
+    {
+        if (!CurrentUserService.IsLoggedIn)
+        {
+            return;
+        }
+
+        var result =
+            await LikeApiService.ToggleCommentLikeAsync(commentId);
+
+        if (result == null)
+        {
+            return;
+        }
+
+        commentLikeCounts[commentId] = result.Count;
+        likedComments[commentId] = result.IsLiked;
     }
     
 }

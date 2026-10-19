@@ -269,6 +269,46 @@ namespace Narrare.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Narrare.Domain.Entities.Like", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("CommentId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommentId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("UserId", "CommentId")
+                        .IsUnique()
+                        .HasFilter("[CommentId] IS NOT NULL");
+
+                    b.HasIndex("UserId", "PostId")
+                        .IsUnique()
+                        .HasFilter("[PostId] IS NOT NULL");
+
+                    b.ToTable("Likes", t =>
+                        {
+                            t.HasCheckConstraint("CK_Likes_OneTarget", "([PostId] IS NOT NULL AND [CommentId] IS NULL)\r\nOR\r\n([PostId] IS NULL AND [CommentId] IS NOT NULL)");
+                        });
+                });
+
             modelBuilder.Entity("Narrare.Domain.Entities.MenuItem", b =>
                 {
                     b.Property<int>("Id")
@@ -737,6 +777,31 @@ namespace Narrare.Infrastructure.Migrations
                     b.Navigation("Post");
 
                     b.Navigation("UploadedImage");
+                });
+
+            modelBuilder.Entity("Narrare.Domain.Entities.Like", b =>
+                {
+                    b.HasOne("Narrare.Domain.Entities.Comment", "Comment")
+                        .WithMany()
+                        .HasForeignKey("CommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Narrare.Domain.Entities.Post", "Post")
+                        .WithMany()
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Narrare.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Comment");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Narrare.Domain.Entities.PageContent", b =>

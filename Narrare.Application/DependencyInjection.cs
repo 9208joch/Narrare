@@ -23,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<IImageService, ImageService>();
         services.AddScoped<IPrivateMessageService, PrivateMessageService>();
         services.AddScoped<IContentReportService, ContentReportService>();
+        services.AddScoped<BadWordFilterService>();
+        services.AddScoped<ILikeService, LikeService>();
 
         return services;
     }

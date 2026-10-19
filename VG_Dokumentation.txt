@@ -26,23 +26,10 @@ chatt räkning + 30 sek uppdatering
 
 torsdagen den 15 okt märkte jag att jag jobbat mod fel uppgift måstelista så det går ej att lita på braches namn
 
+BogaNet.BadWordFilter
 
 
-kvart att göra minimum
+Fula ord-filter gå över
 
-Inlämningsuppgift – Snackis - G
-
-
-◦ Det ska också finnas en anmälanfunktion, för stötande inlägg, som en admin sedan ska kunna
-granska I en lista.										(behöver implementeras) 	är på nu
-
-
-Inlämningsuppgift – Snackis - VG
-
-
- 
-◦ Det ska gå att ge inlägget t ex tummen-upp, hjärta m m, och det ska gå att se hur många som
-t ex gillat inlägget.										(blomma) (behöver implementeras) 
-◦ Fula ord-filter. Om inlägget innehåller opassande ord, så ska dessa ersättas med *********	(behöver implementeras) 
-
+fula ord medvetet ej implimentarat på privata medddelanden
 

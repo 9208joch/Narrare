@@ -32,7 +32,8 @@ namespace Narrare.Web
             builder.Services.AddScoped<ConversationsApiService>();
             builder.Services.AddScoped<UnreadMessagesService>();
             builder.Services.AddScoped<ContentReportsApiService>();
-            
+            builder.Services.AddScoped<LikeApiService>();
+
 
             builder.Services.AddScoped<GalleryApiService>(serviceProvider =>
             {

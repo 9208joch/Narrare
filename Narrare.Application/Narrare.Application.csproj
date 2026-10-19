@@ -7,11 +7,54 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\domains.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\cs.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\da.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\de.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\de_ch.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\el.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\en.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\es.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\fi.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\fr.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\hi.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\hu.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\it.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\ja.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\ko.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\nl.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\no.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\pl.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\pt.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\ru.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\sv.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\th.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\tr.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\vi.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\ltr\zh.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\rtl\ar.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\rtl\fa.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\special\emoji.txt" />
+    <Content Remove="C:\Users\User\.nuget\packages\boganet.badwordfilter\1.4.0\contentFiles\any\net8.0\Resources\Filters\special\global.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Narrare.Domain\Narrare.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.12" />
+    <PackageReference Include="BogaNet.BadWordFilter" Version="1.4.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.13" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="10.0.13" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\en.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\sv.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

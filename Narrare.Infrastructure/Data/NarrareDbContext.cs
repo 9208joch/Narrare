@@ -3,6 +3,7 @@ using Narrare.Domain.Entities;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 
 namespace Narrare.Infrastructure.Data;
@@ -31,6 +32,7 @@ public class NarrareDbContext : DbContext
     public DbSet<GroupMessageReadStatus> GroupMessageReadStatuses
     => Set<GroupMessageReadStatus>();
     public DbSet<ContentReport> ContentReports { get; set; }
+    public DbSet<Like> Likes { get; set; }
 
 
 
@@ -376,7 +378,7 @@ public class NarrareDbContext : DbContext
             entity.Property(report => report.Reason)
                 .IsRequired()
                 .HasMaxLength(1000);
-
+            
             entity.Property(report => report.CreatedAt)
                 .IsRequired();
 
@@ -405,8 +407,56 @@ public class NarrareDbContext : DbContext
                 .HasForeignKey(report => report.CommentId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+        modelBuilder.Entity<Like>(entity =>
+        {
+            entity.HasKey(like => like.Id);
 
+            
+            // En användare kan bara gilla samma inlägg en gång.
+            entity.HasIndex(like => new
+            {
+                like.UserId,
+                like.PostId
+            })
+            .IsUnique()
+            .HasFilter("[PostId] IS NOT NULL");
+            
+            // En användare kan bara gilla samma kommentar en gång.
+            entity.HasIndex(like => new
+            {
+                like.UserId,
+                like.CommentId
+            })
+            .IsUnique()
+            .HasFilter("[CommentId] IS NOT NULL");
+            
+            entity.HasOne(like => like.User)
+                .WithMany()
+                .HasForeignKey(like => like.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(like => like.Post)
+             .WithMany()
+             .HasForeignKey(like => like.PostId)
+               .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(like => like.Comment)
+                .WithMany()
+                .HasForeignKey(like => like.CommentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // En gilla-markering måste tillhöra antingen
+            // ett inlägg eller en kommentar.
+            entity.ToTable(table => table.HasCheckConstraint(
+                "CK_Likes_OneTarget",
+                """
+        ([PostId] IS NOT NULL AND [CommentId] IS NULL)
+        OR
+        ([PostId] IS NULL AND [CommentId] IS NOT NULL)
+        """));
+        });
     }
+    
 
 
 } 

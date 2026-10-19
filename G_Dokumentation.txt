@@ -19,3 +19,8 @@ Grafisk profil
 Den gröna färgen i projektets har justerats till färgkoden #96F90F för att stämma bettre med bild.
 
 jag har valt att köra på Blazor då jag är oerfaren i detta
+
+till seed
+lika komentarter
+likade inlägg
+innlägg med bilder

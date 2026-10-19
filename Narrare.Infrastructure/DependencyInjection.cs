@@ -45,6 +45,7 @@ public static class DependencyInjection
         services.AddScoped<IConversationService, ConversationService>();
         services.AddScoped< IGroupMessageReadStatusRepository,GroupMessageReadStatusRepository>();
         services.AddScoped<IContentReportRepository, ContentReportRepository>();
+        services.AddScoped<ILikeRepository, LikeRepository>();
 
         var imageStorageProvider =
             configuration["ImageStorage:Provider"] ?? "Local";

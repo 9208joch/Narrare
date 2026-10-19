@@ -10,12 +10,15 @@ namespace Narrare.Application.Services;
 public class PostService : IPostService
 {
     private readonly IPostRepository _postRepository;
-
-    public PostService(IPostRepository postRepository)
+    private readonly BadWordFilterService _badWordFilterService;
+    public PostService(
+    IPostRepository postRepository,
+    BadWordFilterService badWordFilterService)
     {
         _postRepository = postRepository;
+        _badWordFilterService = badWordFilterService;
     }
-
+    
     public async Task<List<Post>> GetAllAsync()
     {
         return await _postRepository.GetAllAsync();
@@ -33,6 +36,9 @@ public class PostService : IPostService
 
     public async Task<Post> CreateAsync(Post post)
     {
+        post.Title = _badWordFilterService.Filter(post.Title);
+        post.Content = _badWordFilterService.Filter(post.Content);
+
         post.CreatedAt = DateTime.UtcNow;
 
         await _postRepository.AddAsync(post);
@@ -40,7 +46,7 @@ public class PostService : IPostService
 
         return post;
     }
-
+    
     public async Task<Post?> UpdateAsync(int id, Post post)
     {
         var existingPost = await _postRepository.GetByIdAsync(id);
@@ -50,8 +56,8 @@ public class PostService : IPostService
             return null;
         }
 
-        existingPost.Title = post.Title;
-        existingPost.Content = post.Content;
+        existingPost.Title = _badWordFilterService.Filter(post.Title);
+        existingPost.Content = _badWordFilterService.Filter(post.Content);
         existingPost.CategoryId = post.CategoryId;
         existingPost.UpdatedAt = DateTime.UtcNow;
 
@@ -59,7 +65,7 @@ public class PostService : IPostService
 
         return existingPost;
     }
-
+    
 
     public async Task<bool> DeleteAsync(int id)
     {

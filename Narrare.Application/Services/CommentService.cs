@@ -10,12 +10,15 @@ namespace Narrare.Application.Services;
 public class CommentService : ICommentService
 {
     private readonly ICommentRepository _commentRepository;
-
-    public CommentService(ICommentRepository commentRepository)
+    private readonly BadWordFilterService _badWordFilterService;
+    public CommentService(
+    ICommentRepository commentRepository,
+    BadWordFilterService badWordFilterService)
     {
         _commentRepository = commentRepository;
+        _badWordFilterService = badWordFilterService;
     }
-    
+
     public async Task<List<Comment>> GetAllAsync()
     {
         return await _commentRepository.GetAllAsync();
@@ -33,6 +36,8 @@ public class CommentService : ICommentService
 
     public async Task<Comment> CreateAsync(Comment comment)
     {
+        comment.Content = _badWordFilterService.Filter(comment.Content);
+
         comment.CreatedAt = DateTime.UtcNow;
 
         await _commentRepository.AddAsync(comment);
@@ -50,7 +55,7 @@ public class CommentService : ICommentService
             return null;
         }
 
-        existingComment.Content = comment.Content;
+        existingComment.Content = _badWordFilterService.Filter(comment.Content);
         existingComment.UpdatedAt = DateTime.UtcNow;
 
         await _commentRepository.SaveChangesAsync();
@@ -69,7 +74,7 @@ public class CommentService : ICommentService
 
         _commentRepository.Delete(comment);
         await _commentRepository.SaveChangesAsync();
-
+        
         return true;
     }
     public async Task<bool> DeleteAsync(int id, int deletedByUserId)
