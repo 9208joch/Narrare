@@ -7,6 +7,7 @@
 @inject UsersApiService UsersApiService
 @inject ApiService ApiService
 @inject NavigationManager NavigationManager
+@inject IConfiguration Configuration
 
 <h1 class="mb-4">Registrera konto</h1>
 
@@ -97,9 +98,11 @@
                     return;
                 }
 
-                // Spara bildens API-adress på användaren.
+                
+                var apiBaseUrl = Configuration["ApiSettings:BaseUrl"];
+
                 user.ProfileImageUrl =
-                    $"https://localhost:7206/api/Images/{uploadedImage.Id}";
+                    $"{apiBaseUrl?.TrimEnd('/')}/api/Images/{uploadedImage.Id}";
             }
 
             // Registrera användaren med profilbildens adress.

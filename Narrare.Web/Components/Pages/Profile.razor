@@ -7,6 +7,7 @@
 @inject CurrentUserService CurrentUserService
 @inject UsersApiService UsersApiService
 @inject ApiService ApiService
+@inject IConfiguration Configuration
 
 <PageTitle>Min profil – Narrare</PageTitle>
 
@@ -156,8 +157,10 @@
                     return;
                 }
 
+                var apiBaseUrl = Configuration["ApiSettings:BaseUrl"];
+
                 profile.ProfileImageUrl =
-                    $"https://localhost:7206/api/Images/{uploadedImage.Id}";
+                    $"{apiBaseUrl?.TrimEnd('/')}/api/Images/{uploadedImage.Id}";
             }
             catch (HttpRequestException ex)
             {

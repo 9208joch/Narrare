@@ -345,20 +345,16 @@ public class ImagesController : ControllerBase
             return NotFound("Bilden kunde inte hittas.");
         }
 
-        var filePath = Path.Combine(
-            AppContext.BaseDirectory,
-            "UploadedImages",
+        var imageStream = await _imageStorageService.OpenReadAsync(
             image.FileName);
 
-        if (!System.IO.File.Exists(filePath))
+        if (imageStream == null)
         {
             return NotFound("Bildfilen kunde inte hittas.");
         }
 
-        return PhysicalFile(
-            filePath,
-            "image/jpeg");
+        return File(imageStream, "image/jpeg");
     }
 
-    
+
 }

@@ -13,6 +13,7 @@
 @inject PostImagesApiService PostImagesApiService
 @inject ContentReportsApiService ContentReportsApiService
 @inject LikeApiService LikeApiService
+@inject IConfiguration Configuration
 
 <PageTitle>Kategori – Narrare</PageTitle>
 
@@ -195,7 +196,7 @@
                                     <div class="d-flex flex-wrap gap-3 mt-3 mb-3">
                                         @foreach (var image in images.OrderBy(image => image.SortOrder))
                                         {
-                                            <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                                            <img src="@($"{Configuration["ApiSettings:BaseUrl"]?.TrimEnd('/')}/api/Images/{image.ImageId}")"
                                                  alt="Bild till inlägget"
                                                  class="img-fluid rounded"
                                                  style="max-width: 250px; max-height: 250px; object-fit: contain;" />
@@ -612,7 +613,7 @@ else
     {
         return;
     }
-
+        
     // Ange användaren och kategorin.
     newPost.UserId = CurrentUserService.CurrentUser!.Id;
     newPost.CategoryId = Id;
@@ -627,27 +628,18 @@ else
     }
 
     // Ladda upp bilden om användaren har valt en.
-        // if (selectedPostImage != null) att fixa för testning
-    // {
-            if (selectedPostImage != null)
+                    if (selectedPostImage != null)
             {
-                Console.WriteLine(
-                    $"TEST: Bild vald: {selectedPostImage.Name}");
-
-                Console.WriteLine("TEST: Försöker ladda upp bilden.");
+               
         var uploadedImage = await ApiService.UploadAsync<UploadedImageDto>(
             "api/Images/upload",
             selectedPostImage);
             
         // Koppla den uppladdade bilden till inlägget.
-            // if (uploadedImage != null) att fixa för testning
-        // {
-        //     await ApiService.PostAsync(
-        //         $"api/Images/posts/{createdPost.Id}/images/{uploadedImage.Id}",
-        //         new { });
-        // }
+      
         if (uploadedImage != null)
-{
+            {
+                
     var linked = await ApiService.PostAsync(
         $"api/Images/posts/{createdPost.Id}/images/{uploadedImage.Id}",
         new { });

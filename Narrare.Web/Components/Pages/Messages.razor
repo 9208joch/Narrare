@@ -437,15 +437,6 @@
     [Parameter]
     public int? ConversationUserId { get; set; }
 
-
-    
-    // protected override async Task OnAfterRenderAsync(bool firstRender)   att fixa för testning ta bort?
-    // {
-    //     if (ConversationUserId.HasValue)
-    //     {
-    //         await JS.InvokeVoidAsync("messagesScroll.restore");
-    //     }
-    // }
     private bool showNewPrivateMessage = false;
     private bool showCreateGroup = false;
     private HashSet<int> selectedRecipientIds = new();

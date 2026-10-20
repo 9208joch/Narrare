@@ -8,6 +8,7 @@
 @inject PageContentApiService PageContentApiService
 @inject CurrentUserService CurrentUserService
 @inject ApiService ApiService
+@inject IConfiguration Configuration
 
 <h1>Administrera sidinnehåll</h1>
 
@@ -316,8 +317,10 @@ else
                 return;
             }
 
+            var apiBaseUrl = Configuration["ApiSettings:BaseUrl"];
+
             newContent.Content =
-                $"https://localhost:7206/api/Images/{uploadedImage.Id}";
+                $"{apiBaseUrl?.TrimEnd('/')}/api/Images/{uploadedImage.Id}";
         }
         else if (string.IsNullOrWhiteSpace(newContent.Content))
         {

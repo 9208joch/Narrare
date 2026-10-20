@@ -22,7 +22,7 @@ bildgalleri admin och användare skillnad
 SixLabors för bildhantering
 chatt räkning + 30 sek uppdatering
 
-"att fixa för testning" lös dessa innan publisering
+
 
 torsdagen den 15 okt märkte jag att jag jobbat mod fel uppgift måstelista så det går ej att lita på braches namn
 

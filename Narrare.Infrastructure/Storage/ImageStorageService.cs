@@ -15,7 +15,7 @@ using Narrare.Infrastructure.Configuration;
 namespace Narrare.Infrastructure.Storage;
 
 
-//public class ImageStorageService : IImageStorageService att fixa för testning
+
 public class LocalImageStorageService : IImageStorageService
 {
     public Task<Stream?> OpenReadAsync(string fileName)
@@ -71,7 +71,7 @@ public class LocalImageStorageService : IImageStorageService
 
     private readonly string _storageDirectory;
 
-    //public ImageStorageService(IOptions<ImageStorageOptions> options)  att fixa för testning
+    
     public LocalImageStorageService(IOptions<ImageStorageOptions> options)
     {
         var storageOptions = options.Value;

@@ -39,7 +39,6 @@ public static class DependencyInjection
         services.AddScoped<ISiteStyleRepository, SiteStyleRepository>();
         services.AddScoped<IImageUsageRepository, ImageUsageRepository>();
         services.AddScoped<IUploadedImageRepository, UploadedImageRepository>();
-        //services.AddScoped<IImageStorageService, ImageStorageService>(); att fixa för testning
         services.AddScoped<IPrivateMessageRepository, PrivateMessageRepository>();
         services.AddScoped<IConversationRepository, ConversationRepository>();
         services.AddScoped<IConversationService, ConversationService>();

@@ -1,6 +1,9 @@
 ﻿@page "/"
+
 @using Narrare.Web.Services
+
 @inject GalleryApiService GalleryApiService
+@inject IConfiguration Configuration
 
 <PageTitle>Narrare</PageTitle>
 
@@ -33,7 +36,7 @@
                 @foreach (var image in galleryImages)
                 {
                     <div class="gallery-item" @key="image.Id">
-                        <img src="@($"https://localhost:7206/api/Images/{image.ImageId}")"
+                        <img src="@($"{Configuration["ApiSettings:BaseUrl"]?.TrimEnd('/')}/api/Images/{image.ImageId}")"
                              alt="Bild från Narrares galleri"
                              @onclick="() => OpenImage(image.ImageId)"
                              style="cursor: pointer;" />
@@ -48,7 +51,7 @@
                                 &times;
                             </button>
 
-                            <img src="@($"https://localhost:7206/api/Images/{selectedImageId.Value}")"
+                            <img src="@($"{Configuration["ApiSettings:BaseUrl"]?.TrimEnd('/')}/api/Images/{selectedImageId.Value}")"
                                  alt="Förstorad bild"
                                  @onclick:stopPropagation="true" />
                         </div>
