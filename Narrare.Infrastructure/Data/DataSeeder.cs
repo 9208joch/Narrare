@@ -114,11 +114,10 @@ public class DataSeeder
         var users = await _context.Users
             .OrderBy(user => user.Id)
             .ToListAsync();
-
-        var categories = await _context.Categories
-            .Where(category => category.Id >= 2 && category.Id <= 6)
-            .OrderBy(category => category.Id)
-            .ToListAsync();
+        
+            var categories = await _context.Categories
+    .OrderBy(category => category.Id)
+    .ToListAsync();
 
         if (users.Count == 0)
         {
@@ -134,7 +133,8 @@ public class DataSeeder
 
         var postTitles = new Dictionary<int, string[]>
         {
-            [2] = new[]
+            
+            [7] = new[]
             {
             "Hur skapar man ett mysigt vardagsrum?",
             "Välja rätt soffa för familjen",
@@ -254,13 +254,18 @@ public class DataSeeder
 
         foreach (var category in categories)
         {
-            foreach (var title in postTitles[category.Id])
+            if (!postTitles.TryGetValue(category.Id, out var titles))
+            {
+                continue;
+            }
+
+            foreach (var title in titles)
             {
                 if (!existingTitleSet.Add(title))
                 {
                     continue;
                 }
-
+                
                 var user = users[postNumber % users.Count];
 
                 newPosts.Add(new Post
@@ -311,7 +316,7 @@ public class DataSeeder
 
         var commentTexts = new Dictionary<int, string[]>
         {
-            [2] = new[]
+            [7] = new[]
             {
             "Vi gjorde något liknande hemma och det blev riktigt bra.",
             "Jag skulle välja en lösning som ger mer förvaring.",
