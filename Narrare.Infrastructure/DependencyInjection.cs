@@ -28,7 +28,7 @@ public static class DependencyInjection
         services.AddScoped(typeof(IRepository<>), 
             typeof(Repository<>));
 
-        
+        services.AddScoped<DataSeeder>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IPostRepository, PostRepository>();
