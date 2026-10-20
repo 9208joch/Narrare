@@ -19,7 +19,7 @@ mata in databas
 hemsida efter
 
 bildgalleri admin och användare skillnad
-SixLabors för bildhantering
+SixLabors för bildhantering   öndrad SkiaSharp
 chatt räkning + 30 sek uppdatering
 
 

@@ -1,18 +1,18 @@
-﻿using Azure.Storage.Blobs;
+﻿
+using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Microsoft.Extensions.Options;
 using Narrare.Application.Interfaces.Services;
 using Narrare.Infrastructure.Configuration;
-using SixLabors.ImageSharp;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using SkiaSharp;
 
 namespace Narrare.Infrastructure.Storage;
 
 public class AzureImageStorageService : IImageStorageService
 {
     private const long MaxFileSize = 20 * 1024 * 1024;
+    private const int MaxDimension = 10000;
+    private const long MaxPixels = 40_000_000;
 
     private readonly BlobContainerClient _containerClient;
 
@@ -39,7 +39,8 @@ public class AzureImageStorageService : IImageStorageService
         if (!imageStream.CanRead || !imageStream.CanSeek)
         {
             throw new ArgumentException(
-                "Bildströmmen måste vara läsbar och sökbar.");
+                "Bildströmmen måste vara läsbar och sökbar.",
+                nameof(imageStream));
         }
 
         if (imageStream.Length <= 0 || imageStream.Length > MaxFileSize)
@@ -50,51 +51,60 @@ public class AzureImageStorageService : IImageStorageService
 
         imageStream.Position = 0;
 
-        using var image =
-            await SixLabors.ImageSharp.Image.LoadAsync(imageStream);
+        using var codec = SKCodec.Create(imageStream)
+            ?? throw new ArgumentException(
+                "Filen innehåller ingen giltig bild.");
 
-        if (image.Width > 10000 ||
-            image.Height > 10000 ||
-            (long)image.Width * image.Height > 40_000_000)
+        var info = codec.Info;
+
+        if (info.Width <= 0 ||
+            info.Height <= 0 ||
+            info.Width > MaxDimension ||
+            info.Height > MaxDimension ||
+            (long)info.Width * info.Height > MaxPixels)
         {
             throw new ArgumentException(
                 "Bildens dimensioner är för stora.");
         }
+
+        using var bitmap = SKBitmap.Decode(codec)
+            ?? throw new ArgumentException(
+                "Bilden kunde inte avkodas.");
+
+        using var image = SKImage.FromBitmap(bitmap);
+
+        using var encoded = image.Encode(
+            SKEncodedImageFormat.Jpeg,
+            85)
+            ?? throw new InvalidOperationException(
+                "Bilden kunde inte konverteras till JPEG.");
 
         var fileName = $"{Guid.NewGuid():N}.jpg";
         var blobClient = _containerClient.GetBlobClient(fileName);
 
         await using var convertedStream = new MemoryStream();
 
-        await image.SaveAsJpegAsync(
-            convertedStream,
-            new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
-            {
-                Quality = 85
-            });
-
+        encoded.SaveTo(convertedStream);
         convertedStream.Position = 0;
 
         await blobClient.UploadAsync(
             convertedStream,
-            new BlobHttpHeaders
+            new BlobUploadOptions
             {
-                ContentType = "image/jpeg"
+                HttpHeaders = new BlobHttpHeaders
+                {
+                    ContentType = "image/jpeg"
+                }
             });
 
         return new StoredImageInfo(
             fileName,
             convertedStream.Length);
     }
+
     public async Task<Stream?> OpenReadAsync(string fileName)
     {
-        if (string.IsNullOrWhiteSpace(fileName) ||
-            Path.GetFileName(fileName) != fileName)
-        {
-            throw new ArgumentException(
-                "Ogiltigt filnamn.",
-                nameof(fileName));
-        }
+        ValidateFileName(fileName);
 
         var blobClient = _containerClient.GetBlobClient(fileName);
 
@@ -110,6 +120,15 @@ public class AzureImageStorageService : IImageStorageService
 
     public async Task DeleteAsync(string fileName)
     {
+        ValidateFileName(fileName);
+
+        var blobClient = _containerClient.GetBlobClient(fileName);
+
+        await blobClient.DeleteIfExistsAsync();
+    }
+
+    private static void ValidateFileName(string fileName)
+    {
         if (string.IsNullOrWhiteSpace(fileName) ||
             Path.GetFileName(fileName) != fileName)
         {
@@ -117,9 +136,5 @@ public class AzureImageStorageService : IImageStorageService
                 "Ogiltigt filnamn.",
                 nameof(fileName));
         }
-
-        var blobClient = _containerClient.GetBlobClient(fileName);
-
-        await blobClient.DeleteIfExistsAsync();
     }
 }
