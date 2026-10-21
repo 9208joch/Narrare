@@ -30,6 +30,17 @@ jobs:
       - name: Publish Narrare.Api
         run: dotnet publish Narrare.Api/Narrare.Api.csproj --configuration Release --output ./publish
 
+      - name: Show publish folder size
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem ./publish -Recurse -File
+          $total = ($files | Measure-Object -Property Length -Sum).Sum
+          Write-Host "Publish folder size: $([math]::Round($total / 1MB, 2)) MB"
+          $files |
+            Sort-Object Length -Descending |
+            Select-Object -First 20 FullName, @{Name="SizeMB";Expression={[math]::Round($_.Length / 1MB, 2)}} |
+            Format-Table -AutoSize
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
