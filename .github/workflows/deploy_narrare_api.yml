@@ -59,10 +59,12 @@ jobs:
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8D023A8777B7430D88598A531231033A }}
 
 
+      
       - name: Assign API deployment role
         shell: bash
         run: |
           az role assignment create \
+            --subscription "${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8D023A8777B7430D88598A531231033A }}" \
             --assignee-object-id b964e545-4f84-41d4-9c86-963d7907eff6 \
             --assignee-principal-type ServicePrincipal \
             --role b24988ac-6180-42a0-ab88-20f7382dd24c \
