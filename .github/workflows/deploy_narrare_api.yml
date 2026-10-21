@@ -57,7 +57,10 @@ jobs:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ABC4880ADB5D43498EEA82939B299152 }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_66121DA536164234A14EA3303BACA41D }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8D023A8777B7430D88598A531231033A }}
-
+          
+      - name: Show Azure identity
+        run: az account show --query "{subscription:id, tenant:tenantId, user:user}" --output json
+        
       - name: Verify Azure Web App
         run: az webapp show --name Narrare-Api --resource-group Narrare-Resources --query "{name:name, resourceGroup:resourceGroup, state:state}" --output table
 
