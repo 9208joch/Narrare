@@ -60,12 +60,10 @@ jobs:
           
       - name: Show Azure identity
         run: az account show --query "{subscription:id, tenant:tenantId, user:user}" --output json
-
         
       - name: Check Contributor role
-        run: az role definition list --name "Contributor" --query "[].{name:roleName,id:name,description:description}" --output table
+        run: az role definition list --name "Contributor" --query "[].{name:roleName,id:name}" --output json
 
-        
       - name: Verify Azure Web App
         run: az webapp show --name Narrare-Api --resource-group Narrare-Resources --query "{name:name, resourceGroup:resourceGroup, state:state}" --output table
 
