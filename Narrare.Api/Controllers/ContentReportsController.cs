@@ -25,7 +25,7 @@ public class ContentReportsController : ControllerBase
     public async Task<IActionResult> Create(
         [FromBody] CreateContentReportDto request)
     {
-        // Hämta användar-ID från den befintliga headern.
+        
         var userIdHeader = Request.Headers["X-User-Id"].FirstOrDefault();
 
         if (!int.TryParse(userIdHeader, out int userId))
@@ -50,23 +50,22 @@ public class ContentReportsController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        // Hämta användarens ID från request-headern.
+       
         var userIdHeader = Request.Headers["X-User-Id"].FirstOrDefault();
 
         if (!int.TryParse(userIdHeader, out int userId))
             return Unauthorized();
 
-        // Hämta den verkliga användaren från databasen.
+   
         var user = await _userService.GetByIdAsync(userId);
 
         if (user == null)
             return Unauthorized();
 
-        // Endast administratörer får se anmälningarna.
         if (user.Role != UserRole.Admin)
             return Forbid();
 
-        // Hämta alla anmälningar.
+        
         var reports = await _contentReportService.GetAllAsync();
 
         return Ok(reports);

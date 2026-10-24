@@ -7,7 +7,7 @@ using Narrare.Domain.Entities;
 using Narrare.Domain.Enums;
 
 namespace Narrare.Infrastructure.Data;
-
+// Seed datan är gjord av ai
 public class DataSeeder
 {
     private readonly NarrareDbContext _context;

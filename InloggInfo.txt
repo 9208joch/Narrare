@@ -1,0 +1,7 @@
+Admin
+Användarnamn: AdminMachAdmin 
+Lösenord: AdminMachAdmin
+
+Vanlig användare
+Användarnamn: VisningVilma 
+Lösenord: VisningVilma

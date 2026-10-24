@@ -81,15 +81,14 @@ public class CommentsController : ControllerBase
             return NotFound();
         }
 
-        // Vanlig användare får bara ändra sina egna kommentarer.
-        // Admin får ändra alla kommentarer.
+
         if (currentUser.Role != Narrare.Domain.Enums.UserRole.Admin &&
             existingComment.UserId != currentUser.Id)
         {
             return Forbid();
         }
 
-        // Användaren får inte kunna byta ägare på kommentaren.
+       
         comment.UserId = existingComment.UserId;
         comment.PostId = existingComment.PostId;
         comment.Id = existingComment.Id;
@@ -183,12 +182,10 @@ public class CommentsController : ControllerBase
             return Unauthorized();
         }
 
-        // API:t bestämmer vem kommentaren tillhör.
         comment.UserId = currentUserId.Value;
 
         var createdComment = await _commentService.CreateAsync(comment);
 
-        // Hämta användaren som skrev kommentaren.
         var author = await _userService.GetByIdAsync(createdComment.UserId);
 
         var result = new CommentDto
@@ -230,15 +227,14 @@ public class CommentsController : ControllerBase
             return NotFound();
         }
 
-        // Vanlig användare får bara ta bort sina egna kommentarer.
-        // Admin får ta bort alla kommentarer.
+
         if (currentUser.Role != Narrare.Domain.Enums.UserRole.Admin &&
             comment.UserId != currentUser.Id)
         {
             return Forbid();
         }
 
-        // Utför mjuk borttagning och spara vem som tog bort kommentaren.
+
         bool success = await _commentService.DeleteAsync(
             id,
             currentUser.Id);

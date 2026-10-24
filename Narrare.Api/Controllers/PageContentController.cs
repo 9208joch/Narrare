@@ -56,9 +56,8 @@ public class PageContentController : ControllerBase
     }
 
 
-    // ========================================
     // ALLA FÅR LÄSA
-    // ========================================
+
 
     [HttpGet("page/{pageId:int}")]
     public async Task<ActionResult<List<PageContent>>> GetByPageId(
@@ -86,9 +85,9 @@ public class PageContentController : ControllerBase
     }
 
 
-    // ========================================
+  
     // ENDAST ADMIN FÅR SKAPA
-    // ========================================
+ 
 
     [HttpPost]
     public async Task<ActionResult<PageContent>> Create(
@@ -106,9 +105,9 @@ public class PageContentController : ControllerBase
     }
 
 
-    // ========================================
+
     // ENDAST ADMIN FÅR ÄNDRA
-    // ========================================
+
 
     [HttpPut("{id:int}")]
     public async Task<ActionResult<PageContent>> Update(
@@ -142,9 +141,9 @@ public class PageContentController : ControllerBase
     }
 
 
-    // ========================================
+ 
     // ENDAST ADMIN FÅR RADERA
-    // ========================================
+
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)

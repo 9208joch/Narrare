@@ -49,7 +49,7 @@ public class LocalImageStorageService : IImageStorageService
 
         imageStream.Position = 0;
 
-        // Läs bildens metadata innan vi avkodar hela bilden.
+ 
         using var codec = SKCodec.Create(imageStream)
             ?? throw new ArgumentException("Filen innehåller ingen giltig bild.");
 

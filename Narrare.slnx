@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/Dokumentation_Presentation/">
     <File Path="Dokumentation.txt" />
+    <File Path="InloggInfo.txt" />
     <File Path="Krav_fran_skola.txt" />
     <File Path="Min_grundplan.txt" />
     <File Path="Roadmap.txt" />

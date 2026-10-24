@@ -75,7 +75,6 @@ public class UserService : IUserService
 
         bool passwordIsValid = false;
 
-        // Försök verifiera lösenordet som en hash.
         try
         {
             var result = _passwordHasher.VerifyHashedPassword(
@@ -87,10 +86,10 @@ public class UserService : IUserService
         }
         catch (FormatException)
         {
-            // Befintliga lösenord i klartext kan inte verifieras som hash.
+          
         }
 
-        // Hantera äldre konton som fortfarande har lösenord i klartext.
+        
         if (!passwordIsValid)
         {
             if (user.PasswordHash != dto.Password)
@@ -98,7 +97,7 @@ public class UserService : IUserService
                 return null;
             }
 
-            // Uppgradera lösenordet till en hash.
+         
             user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
 
             await _userRepository.SaveChangesAsync();

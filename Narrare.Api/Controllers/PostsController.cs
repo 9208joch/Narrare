@@ -193,7 +193,7 @@ public class PostsController : ControllerBase
             return Forbid();
         }
 
-        // Användaren får inte kunna byta ägare på inlägget.
+      
         post.UserId = existingPost.UserId;
         post.Id = existingPost.Id;
 

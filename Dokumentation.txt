@@ -1,41 +1,34 @@
-gå över bild max storlek
-användare borttagen blir författade Delited
-SixLabors kolla över bildsäkerhet
-vanlig admin= edditera och ta bort
-master admin? kattegorier roller 2a hand kontroll?
-se över sidoformatering och namn
-seeda antal besökare
-sortera inlägg
-besökare räknare på kattegorier
-admin: söka på användare (flyttat från G)
-admin: Blockera/ avblockera användare (flyttat från G)
-admin: Skicka varning till användare samt se antal varningar(flyttat från G)
+Narrare – Dokumentation
+
+Grundläggande information
+
+Forumets namn: Narrare
+Forumets tema: Hus och hem
+
+Narrare är latin och betyder ”att berätta” eller ”att berätta en historia”.
 
 
-chatt person till person, person till många , många till många , namnge
+Publicering och projektstorlek
 
-databa på asher först 
-mata in databas
-hemsida efter
+Narrare har inte publicerats på Azure på grund av projektets storlek. 
+LiaPresentation medföljer, som är en annan webbplats som är publicerad och kan användas för att visa att jag behärskar publicering på Azure.
 
-bildgalleri admin och användare skillnad
-SixLabors för bildhantering   ändrad SkiaSharp
-chatt räkning + 30 sek uppdatering
+Projektets storlek före komprimering är ungefär 845 MB, fördelat enligt följande:
 
+Narrare.Api: 415 MB
 
+Narrare.Application: 733 kB
 
-torsdagen den 15 okt märkte jag att jag jobbat mod fel uppgift måstelista så det går ej att lita på braches namn
+Narrare.Domain: 185 kB
 
-BogaNet.BadWordFilter
+Narrare.Infrastructure: 6,37 MB
 
+Narrare.Web: 423 MB
 
-Fula ord-filter gå över
+Efter komprimering blir storleken ungefär hälften.
 
-fula ord medvetet ej implimentarat på privata medddelanden
-
-namn på forum: Narrare
-tema på forumet: hus och hem
-Narrare är lation före "att berätta" eller "att berätta en historia"
+Den aktuella Azure App Service-planen har inte tillräckligt med diskutrymme för att hantera distributionen. 
+En uppgradering till B1 har undersökts som ett alternativ. Den uppskattade kostnaden är cirka 55–60 USD per månad.
 
 
 
@@ -43,19 +36,116 @@ Förberedelser inför VG
 
 Vissa förberedelser inför VG-delen har genomförts redan under G-arbetet. Syftet har varit att förenkla det fortsatta arbetet och skapa en grund som kan byggas vidare på.
 
-Arbetsprocess och inlärning
-
 En stor del av projektet utvecklades innan motsvarande moment hade gåtts igenom i klassrummet. Det innebär att vissa lösningar kan skilja sig från de metoder som senare presenteras under utbildningen. Det kan finnas alternativa sätt att lösa samma problem, utan att den befintliga lösningen för den skull är felaktig.
 
 Projektet har därför även inneburit ett eget utforskande av tekniker, arkitektur och problemlösning.
 
-Grafisk profil
-
 Den gröna färgen i projektets har justerats till färgkoden #96F90F för att stämma bettre med bild.
 
-jag har valt att köra på Blazor då jag är oerfaren i detta
+jag har valt att köra på Blazor då jag är/var oerfaren i detta
 
-till seed
-lika komentarter
-likade inlägg
-innlägg med bilder
+
+
+Saker värda att se och varför jag valt
+
+Header:
+Bilden är AI-genererad.
+Bilden är klickbar och leder till hem/start.
+
+Meny:
+Menyn är separat från headern men har samma bakgrundsfärg för att skapa en illusion av att de tillhör samma del av sidan.
+Administratörer kan redigera menyn, ta bort och lägga till alternativ samt ändra deras ordning.
+
+Footer:
+Bilden är AI-genererad.
+Det är medvetet lämnat platts för ytterligare text. 
+
+Kategorier:
+Fem kategorier finns vid start.
+Administratörer kan redigera, ta bort och lägga till kategorier.
+
+Inlägg och kommentarer:
+Ej inloggade besökare kan läsa inlägg och kommentarer, men inte skapa egna inlägg eller kommentarer.
+
+Vanliga användare kan:
+Skapa inlägg med bilder.
+Kommentera inlägg.
+Redigera och radera sina egna inlägg och kommentarer.
+Gilla inlägg och kommentarer med hjälp av blomikonen.
+Anmäla inlägg och kommentarer.
+
+Administratörer har samma funktioner som vanliga användare, men kan även redigera och radera alla användares inlägg och kommentarer.
+
+Min grundplan var att använda SixLabors för bildhantering men mällan min research och färdigställandet av projektet så har SixLabors blivit en betalprodukt och jag har därför valt att använda ImageSharp istället.
+
+Svordomsfilter:
+Ett svordomsfilter har implementerats för inlägg och kommentarer. Det gäller även vid redigering och kontrollerar både rubriker och innehåll.
+Filtret använder NuGet-paketet BogaNet.BadWordFilter.
+I nuläget hanteras svenska och engelska, med möjlighet att lägga till fler språk.
+Filtret har medvetet inte implementerats för privata meddelanden, eftersom dessa är avsedda för privata konversationer mellan användarna.
+
+Om:
+Sidan är en testsida som kan redigeras av administratörer.
+En besöksräknare har implementerats.
+
+Logga in:
+Inloggning sker med användarnamn och lösenord.
+Lösenord lagras i hashad form.
+Om användarens profil inte är färdigställd visas en påminnelse vid inloggning.
+
+Registrera:
+Vid registrering krävs användarnamn och lösenord.
+
+Följande uppgifter är frivilliga:
+Ålder
+Ort
+Yrke eller sysselsättning
+Profilbild
+
+Meddelanden:
+Möjlighet till 1 till 1, 1 till många och Gruppchattar.
+I gruppchattar kan deltagarna ändra chattens namn och bjuda in fler deltagare även efter att chatten har skapats.
+Svordomsfiltret har medvetet inte implementerats för meddelanden, eftersom dessa är privata konversationer.
+Meddelandeknappen i menyn visar antalet chattar som innehåller olästa meddelanden, inte det totala antalet olästa meddelanden.
+Antalet uppdateras vid inloggning, när användaren klickar på Meddelanden eller genom automatisk uppdatering var 30 sekund. Uppdateringen sker vid det av dessa tillfällen som inträffar först.
+
+Min profil:
+Möjlighet att välja egen profilbild (om inget är valt så tilldelas en standardbild).
+Ange ålder, ort och sysselsättning.
+Välja om ålder, ort och sysselsättning ska vara synliga för andra användare.
+Användarnamn och profilbild kan inte väljas bort.
+För att visa en användares profil klickar man på användarens namn eller profilbild vid ett inlägg eller en kommentar.
+På profilsidan kan man se användarens samtliga inlägg.
+
+Administration:
+Administratörer har möjlighet att:
+Redigera menyns innehåll och ordning.
+Redigera kategoriernas innehåll och ordning.
+Skapa nya sidor.
+Redigera befintliga sidor.
+Ändra utseendet på specifika sidor eller globalt.
+Utseendeinställningarna omfattar färg, textstorlek, fetstil, understrykning och marginaler.
+
+Anmälningsgranskning:
+Anmälningar som användare gör mot inlägg eller kommentarer visas i denna del av administrationsgränssnittet.
+Följande information visas:
+Användaren som skickade anmälan.
+Vilket inlägg eller vilken kommentar som anmälts.
+Motiveringen till anmälan.
+Datum och tid för anmälan.
+Anmälans status.
+Alla användare med administratörsbehörighet kan komma åt anmälningsgranskningen.
+Administratören kan markera en anmälan som granskad och/eller ta bort det anmälda innehållet.
+
+Seed filer:
+Seed-filerna innehåller testdata som används för att fylla databasen vid uppstart eller initiering.
+
+Inlägg, kommentarer och gillamarkeringar i seed-datan är helt AI-genererade.
+
+
+
+
+
+
+
+

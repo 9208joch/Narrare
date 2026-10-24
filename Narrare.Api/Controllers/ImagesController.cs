@@ -135,7 +135,7 @@ public class ImagesController : ControllerBase
             return Unauthorized();
         }
 
-        // Tillfällig kontroll: endast användare med Role = 1 får lägga till bilder.
+
         if ((int)currentUser.Role != 1)
         {
             return Forbid();
@@ -169,7 +169,7 @@ public class ImagesController : ControllerBase
             return Unauthorized();
         }
 
-        // Tillfällig kontroll: endast Role = 1 får ändra galleriet.
+
         if ((int)currentUser.Role != 1)
         {
             return Forbid();

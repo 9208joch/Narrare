@@ -1,4 +1,7 @@
-Skeleton:
+Detta är skrivet mäst för att jag ej skall missa något, jag har medvetet flyttat saker mällan g och vg för det var enklare att göra tilsammans
+
+
+skelett:
 
 DI
 Repository
@@ -98,19 +101,4 @@ Profil-sidor
 Admin kan redigera profil
 Förbättrad sökning
 
-idéer att se över senare
 
-XSS
-SQL Injection
-CSRF
-Password hashing
-Cookie configuration
-Authorization
-Role checks
-File upload security
-Input validation
-IDOR
-
-
-Betalversion?
-reklam?

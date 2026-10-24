@@ -14,8 +14,7 @@ public class Like
     public User User { get; set; } = null!;
 
     // Inlägget som har fått en gilla-markering.
-    // Nullable eftersom en Like ska kunna tillhöra
-    // antingen ett inlägg eller en kommentar.
+    // Nullable eftersom en Like ska kunna tillhöra antingen ett inlägg eller en kommentar.
     public int? PostId { get; set; }
     public Post? Post { get; set; }
 

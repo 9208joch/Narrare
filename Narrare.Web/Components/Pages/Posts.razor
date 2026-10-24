@@ -102,7 +102,7 @@ else
                 
                 <div class="d-flex justify-content-between align-items-start mb-2">
                     <div>
-                        @* Här ligger inläggets befintliga avsändare om du visar den. *@
+                        
                     </div>
 
                     @if (CurrentUserService.IsLoggedIn)
@@ -399,10 +399,9 @@ else
     private Dictionary<int, string> newCommentContent = new();
 
     private List<PostDto>? posts;
-    // Vilket inläggs meny som är öppen.
+
     private int? openReportMenuPostId;
 
-    // Vilken kommentar som är öppen i menyn.
     private int? openReportMenuCommentId;
 
     private Dictionary<int, List<PostImageDto>> postImages = new();
@@ -499,7 +498,7 @@ private async Task CreatePost()
         return;
     }
 
-    // Ladda upp och koppla bilden om användaren har valt en.
+
     if (selectedPostImage != null)
     {
         var uploadedImage = await ApiService.UploadAsync<UploadedImageDto>(
@@ -514,7 +513,7 @@ private async Task CreatePost()
         }
     }
 
-    // Hämta alla inlägg igen.
+
     posts = await PostsApiService.GetAllAsync();
 
     if (posts != null)
@@ -529,7 +528,7 @@ private async Task CreatePost()
         return;
     }
 
-    // Hämta bilderna igen så att den nya bilden visas.
+ 
     foreach (var post in posts)
     {
         var images =
@@ -539,11 +538,11 @@ private async Task CreatePost()
             images ?? new List<PostImageDto>();
     }
 
-    // Förbered kommentarsfält för det nya inlägget.
+ 
     comments[createdPost.Id] = new List<CommentDto>();
     newCommentContent[createdPost.Id] = string.Empty;
 
-    // Återställ formuläret.
+  
     selectedPostImage = null;
 
     newPost = new Post
@@ -650,13 +649,12 @@ private async Task CreatePost()
             return;
         }
         
-        // Behåll kommentaren i listan så att
-        // modereringsmeddelandet kan visas.
+      
         comment.IsDeleted = true;
         comment.DeletedByUserId = CurrentUserService.CurrentUser!.Id;
         comment.DeletedAt = DateTime.UtcNow;
 
-        // Stäng eventuell redigering.
+       
         editingComments[comment.Id] = false;
     }
     private void EditPost(PostDto post)
@@ -732,8 +730,7 @@ private async Task CreatePost()
         }
          
 
-        // Visa att inlägget har modererats istället för att
-        // ta bort det från listan.
+        
         post.IsDeleted = true;
         post.DeletedByUserId = CurrentUserService.CurrentUser!.Id;
         post.DeletedAt = DateTime.UtcNow;
@@ -741,7 +738,7 @@ private async Task CreatePost()
         // Stäng eventuell redigering.
         editingPosts[post.Id] = false;
 
-        // Kommentarerna ska inte längre visas.
+        
         comments.Remove(post.Id);
         newCommentContent.Remove(post.Id);
     }
@@ -762,7 +759,7 @@ private async Task CreatePost()
     {
         openReportMenuPostId = null;
 
-        // Popup-rutan kopplar vi in i nästa steg.
+        
     }
     
     private void ToggleCommentReportMenu(int commentId)
@@ -782,7 +779,7 @@ private async Task CreatePost()
     {
         openReportMenuCommentId = null;
 
-        // Popup-rutan kopplar vi in i nästa steg.
+        
     }
 
     
