@@ -192,13 +192,15 @@ else
             errorMessage = "Slug måste anges.";
             return;
         }
+        // Ta bort inledande snedstreck från Slug.
+        newPage.Slug = newPage.Slug.TrimStart('/');
         
         if (string.IsNullOrWhiteSpace(newPage.Content))
         {
             errorMessage = "Innehåll måste anges.";
             return;
         }
-
+        
         var result =
             await PagesApiService.CreateAsync(newPage);
 

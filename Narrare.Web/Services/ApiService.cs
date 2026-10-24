@@ -40,7 +40,7 @@ public class ApiService
         {
             return default;
         }
-
+        
         return await response.Content.ReadFromJsonAsync<T>();
     }
 

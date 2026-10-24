@@ -125,7 +125,7 @@ public class DataSeeder
                 "Inga användare finns för testinläggen.");
         }
 
-        if (categories.Count != 5)
+        if (categories.Count == 5)
         {
             throw new InvalidOperationException(
                 "Alla fem kategorier måste finnas i databasen.");
