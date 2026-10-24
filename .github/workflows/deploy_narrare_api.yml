@@ -1,0 +1,89 @@
+
+name: Build and deploy Narrare API to Azure
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'Narrare.Api/**'
+      - 'Narrare.Application/**'
+      - 'Narrare.Domain/**'
+      - 'Narrare.Infrastructure/**'
+      - '.github/workflows/deploy_narrare_api.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Publish Narrare.Api
+        run: dotnet publish Narrare.Api/Narrare.Api.csproj --configuration Release --output ./publish
+
+      - name: Show publish folder size
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem ./publish -Recurse -File
+          $total = ($files | Measure-Object -Property Length -Sum).Sum
+          Write-Host "Publish folder size: $([math]::Round($total / 1MB, 2)) MB"
+          $files |
+            Sort-Object Length -Descending |
+            Select-Object -First 20 FullName, @{Name="SizeMB";Expression={[math]::Round($_.Length / 1MB, 2)}} |
+            Format-Table -AutoSize
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: narrare-api
+          path: ./publish
+
+  deploy:
+    runs-on: windows-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: narrare-api
+          path: ./publish
+
+     
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_ABC4880ADB5D43498EEA82939B299152 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_66121DA536164234A14EA3303BACA41D }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_8D023A8777B7430D88598A531231033A }}
+
+
+      
+      - name: Show Azure identity
+        run: az account show --query "{subscription:id, tenant:tenantId, user:user}" --output json
+        
+      - name: Check Contributor role
+        run: az role definition list --name "Contributor" --query "[].{name:roleName,id:name}" --output json
+
+      - name: Verify Azure Web App
+        run: az webapp show --name Narrare-Api --resource-group Narrare-Resources --query "{name:name, resourceGroup:resourceGroup, state:state}" --output table
+
+      - name: Deploy API to Azure
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'Narrare-Api'
+          slot-name: 'Production'
+          package: ./publish
+
