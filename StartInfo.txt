@@ -1,0 +1,3 @@
+För start 
+starta Narrare.Api och Narrare.Web samtidigt.
+Första starten kan ta lite tid då databasen behöver migreras och seedas.
